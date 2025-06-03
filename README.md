@@ -16,11 +16,12 @@ Rediseñar el portal de prácticas para que los alumnos puedan:
 ``` sh
 npm install
 ``` 
-  4. En la misma carpeta, ejecutar el comando:
+  3. En la misma carpeta, ejecutar el comando:
   ``` sh
 npm start
-  6. ¡Listo!
 ``` 
+  4. ¡Listo!
+
 ### Requerimientos previos
 Se necesita tener instalado:
 - Node.js
