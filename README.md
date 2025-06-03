@@ -12,9 +12,13 @@ Rediseñar el portal de prácticas para que los alumnos puedan:
 
 ## Cómo empezar
   1. Descargar el zip o clonar repositorio base del proyecto.
-  2. Dirigirse a la carpeta "portal" y descargar la dependencia → npm install
-  3. En la misma carpeta, ejecutar el comando → npm start
-  4. ¡Listo!
+  2. Dirigirse a la carpeta "portal" y descargar la dependencia:
+  ´´´ sh
+npm install
+  4. En la misma carpeta, ejecutar el comando:
+  ´´´ sh
+npm start
+  6. ¡Listo!
 
 ### Requerimientos previos
 Se necesita tener instalado:
