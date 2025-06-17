@@ -498,15 +498,15 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
             <div className="bg-gray-900 p-4 rounded-lg space-y-2">
               <p className="text-gray-300">
                 <span className="font-medium text-gray-100">Nombre:</span>{" "}
-                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? 'Markus Persson' : 'Nombre pendiente de confirmación'} /* Modified: Supervisor Name */
+                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? 'Markus Persson' : 'Nombre pendiente de confirmación'}
               </p>
               <p className="text-gray-300">
                 <span className="font-medium text-gray-100">Email:</span>{" "}
-                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? 'markus.persson@mojang.com' : 'Email pendiente de confirmación'} /* Modified: Supervisor Email */
+                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? 'markus.persson@mojang.com' : 'Email pendiente de confirmación'}
               </p>
               <p className="text-gray-300">
                 <span className="font-medium text-gray-100">Teléfono:</span>{" "}
-                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? '+46 70 123 45 67' : 'Teléfono pendiente de confirmación'} /* Modified: Supervisor Phone */
+                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? '+46 70 123 45 67' : 'Teléfono pendiente de confirmación'}
               </p>
             </div>
           </div>
