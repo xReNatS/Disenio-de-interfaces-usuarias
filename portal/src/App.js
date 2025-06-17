@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ChevronDown, Menu, X, Briefcase, User, Search, Building, BarChart2, Info, CheckCircle, Plus, Upload, Trash2, Edit, CalendarDays, Send, Mail, MapPin } from 'lucide-react'; // Importar iconos de Lucide React, añadiendo Mail y MapPin
+import React, { useState, useEffect } from 'react';
+import { ChevronDown, Menu, X, Briefcase, User, Search, Building, BarChart2, Info, CheckCircle, Plus, Upload, Trash2, Edit, CalendarDays, Send, Mail, MapPin, Lightbulb } from 'lucide-react';
 
 // Componente para el ítem de navegación de la barra lateral
 const SidebarItem = ({ icon: Icon, text, isActive, onClick }) => (
@@ -31,11 +31,12 @@ const Sidebar = ({ currentPage, navigate, toggleSidebar, isSidebarOpen }) => {
           transition-transform duration-300 ease-in-out z-50`}
       >
         <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center">
-            {/* Logo o icono del Sistema de Prácticas */}
-            <span className="text-orange-500 text-3xl font-bold mr-2">D</span>
+          {/* Hacemos que el logo y el título sean clickeables para navegar a "Mis Prácticas" */}
+          <button onClick={() => navigate('my-practices')} className="flex items-center cursor-pointer hover:opacity-80 transition-opacity duration-200">
+            {/* Reemplazado la 'D' con el logo */}
+            <img src="erasebg-transformed.webp" alt="Logo" className="w-8 h-8 mr-2" />
             <h1 className="text-2xl font-bold">Sistema de Prácticas</h1>
-          </div>
+          </button>
           <button onClick={toggleSidebar} className="lg:hidden text-gray-400 hover:text-white">
             <X size={24} />
           </button>
@@ -127,14 +128,15 @@ const PracticeCard = ({ title, status, statusColor, children }) => {
 };
 
 // Componente para los detalles de la Práctica Industrial (cuando está en proceso o completada)
-const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, industrialPracticeStatus }) => {
-  const [activeTab, setActiveTab] = useState('informacion'); // Estado para la pestaña activa, por defecto "informacion"
+const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, industrialPracticeStatus, practiceCategory, setPracticeDates, practiceStartDate, practiceEndDate }) => {
+  // El estado 'activeTab' se inicializa con 'informacion' para que sea la pestaña predeterminada
+  const [activeTab, setActiveTab] = useState('información');
   const [showNewBitacoraForm, setShowNewBitacoraForm] = useState(false); // Estado para mostrar/ocultar el formulario de nueva bitácora
   const [latestBitacora, setLatestBitacora] = useState({ // Estado para la última bitácora
-    date: '23 de mayo del 2025',
-    time: '09:00 a 18:30',
-    developedActivity: 'Creación y familiarización con el portal de Azure + creación grupos y recursos tipo testing',
-    pendingActivity: 'No hay actividades pendientes.',
+    date: '',
+    time: '',
+    developedActivity: '',
+    pendingActivity: '',
   });
 
   // Estado para los campos del formulario de nueva bitácora
@@ -144,6 +146,31 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
     actividadDesarrollada: '',
     actividadPendiente: '',
   });
+
+  // Efecto para actualizar la fecha actual en la bitácora cuando el componente se monta
+  useEffect(() => {
+    if (industrialPracticeStatus === 'en_espera') {
+      const today = new Date();
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const formattedDate = today.toLocaleDateString('es-ES', options);
+      setLatestBitacora({
+        date: formattedDate,
+        time: '',
+        developedActivity: '',
+        pendingActivity: '',
+      });
+    } else if (industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada') {
+        if (!latestBitacora.developedActivity) { // Only set to empty if no bitacora has been added yet
+            setLatestBitacora({
+                date: '',
+                time: '',
+                developedActivity: '',
+                pendingActivity: '',
+            });
+        }
+    }
+  }, [industrialPracticeStatus]);
+
 
   // Maneja el cambio en los campos del formulario de bitácora
   const handleBitacoraFormChange = (e) => {
@@ -170,29 +197,68 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
       actividadDesarrollada: '',
       actividadPendiente: '',
     });
-    alert('¡Bitácora añadida con éxito!');
+    // Replaced alert with a custom message box for better UX
+    const messageBox = document.createElement('div');
+    messageBox.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-green-600 text-white p-4 rounded-lg shadow-lg z-[9999]';
+    messageBox.textContent = '¡Bitácora añadida con éxito!';
+    document.body.appendChild(messageBox);
+    setTimeout(() => {
+      document.body.removeChild(messageBox);
+    }, 3000);
   };
 
   // Función para terminar la práctica
   const handleTerminarPractica = () => {
+    const today = new Date();
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const formattedDate = today.toLocaleDateString('es-ES', options);
+    setPracticeDates(practiceStartDate, formattedDate); // Update parent state with end date
     setIndustrialPracticeStatus('completada'); // Cambiar el estado a "Completada"
-    alert('¡Práctica finalizada con éxito!');
+    // Replaced alert with a custom message box for better UX
+    const messageBox = document.createElement('div');
+    messageBox.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-green-600 text-white p-4 rounded-lg shadow-lg z-[9999]';
+    messageBox.textContent = '¡Práctica finalizada con éxito!';
+    document.body.appendChild(messageBox);
+    setTimeout(() => {
+      document.body.removeChild(messageBox);
+    }, 3000);
     // No redirigir, solo cambiar el estado en la misma página
   };
+
+  const handleSkipPractice = () => {
+    const today = new Date();
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const formattedDate = today.toLocaleDateString('es-ES', options);
+    setPracticeDates(formattedDate, ''); // Update parent state with start date, clear end date
+    setIndustrialPracticeStatus('en_proceso'); // Transiciona al estado "en_proceso"
+    const messageBox = document.createElement('div');
+    messageBox.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-600 text-white p-4 rounded-lg shadow-lg z-[9999]';
+    messageBox.textContent = 'Estado de práctica actualizado a "En Proceso" (SKIP)';
+    document.body.appendChild(messageBox);
+    setTimeout(() => {
+      document.body.removeChild(messageBox);
+    }, 3000);
+  };
+
+  const today = new Date();
+  const currentDay = today.getDate();
+  const currentMonth = today.toLocaleString('es-ES', { month: 'long' });
+  const currentYear = today.getFullYear();
+
 
   return (
     <div className="text-left">
       {/* Pestañas de navegación */}
-      <div className="flex space-x-4 border-b border-gray-700 mb-6">
+      <div className="flex space-x-4 border-b border-gray-700 mb-6 overflow-x-auto pb-2">
         {['INFORMACIÓN', 'BITÁCORAS',
           industrialPracticeStatus === 'completada' && 'INFORME',
           industrialPracticeStatus === 'completada' && 'EVALUACIÓN',
-          'LOGS', 'SOLICITUDES'
+          'ESTADO', 'SOLICITUDES'
         ].filter(Boolean).map((tab) => ( // Filter out false values if tabs are not active
           <button
             key={tab}
             onClick={() => setActiveTab(tab.toLowerCase())}
-            className={`py-2 px-4 text-sm font-medium rounded-t-lg transition-colors duration-200
+            className={`py-2 px-4 text-sm font-medium rounded-t-lg transition-colors duration-200 whitespace-nowrap
               ${activeTab === tab.toLowerCase() ? 'bg-orange-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white'}`}
           >
             {tab}
@@ -201,32 +267,73 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
       </div>
 
       {/* Contenido de las pestañas */}
-      {activeTab === 'informacion' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[400px]"> {/* Added min-h for consistent display */}
+      {activeTab === 'información' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[400px]">
           {/* Columna izquierda: Detalles de la Práctica */}
           <div className="space-y-4">
             <h3 className="text-xl font-semibold text-white mb-2">Práctica</h3>
             <div className="bg-gray-900 p-4 rounded-lg space-y-2">
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Estado:</span> {industrialPracticeStatus === 'completada' ? 'Aprobado' : 'En Proceso'}</p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Categoría:</span> Investigativa</p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Modo:</span> 324 horas</p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Progreso:</span> 226 Hr</p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Inicio:</span> 1 de diciembre, 2024</p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Término:</span> 6 de marzo 2025</p>
+              <p className="text-gray-300">
+                <span className="font-medium text-gray-100">Estado:</span>{" "}
+                {industrialPracticeStatus === 'en_proceso' ? 'En Proceso' :
+                 industrialPracticeStatus === 'completada' ? 'Aprobado' : 'En espera'}
+              </p>
+              <p className="text-gray-300">
+                <span className="font-medium text-gray-100">Categoría:</span>{" "}
+                {practiceCategory ? practiceCategory.charAt(0).toUpperCase() + practiceCategory.slice(1).replace(/_/g, ' ') : 'Sin Categoría'}
+              </p>
+              <p className="text-gray-300">
+                <span className="font-medium text-gray-100">Modo:</span> 324 horas
+              </p>
+              <p className="text-gray-300">
+                <span className="font-medium text-gray-100">Progreso:</span>{" "}
+                {industrialPracticeStatus === 'en_proceso' ? '37Hrs' : '226 Hr'}
+              </p>
+              <p className="text-gray-300">
+                <span className="font-medium text-gray-100">Inicio:</span>{" "}
+                {practiceStartDate || 'N/A'}
+              </p>
+              {industrialPracticeStatus === 'completada' && (
+                <p className="text-gray-300">
+                  <span className="font-medium text-gray-100">Término:</span> {practiceEndDate || 'N/A'}
+                </p>
+              )}
             </div>
 
             <h3 className="text-xl font-semibold text-white mb-2 mt-4">Empresa</h3>
             <div className="bg-gray-900 p-4 rounded-lg space-y-2">
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Nombre:</span> Nombre apellido</p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Dirección:</span> Av. España 1680</p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">RUT:</span> 12.345.678-9</p>
+              <p className="text-gray-300">
+                <span className="font-medium text-gray-100">Nombre:</span>{" "}
+                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada'
+                  ? 'Servicios Integrales de Computación e Informática'
+                  : 'Nombre de la empresa pendiente de confirmación'}
+              </p>
+              <p className="text-gray-300">
+                <span className="font-medium text-gray-100">Dirección:</span>{" "}
+                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada'
+                  ? 'La Concepción 81, of 304, providencia, stgo'
+                  : 'Dirección pendiente de confirmación'}
+              </p>
+              <p className="text-gray-300">
+                <span className="font-medium text-gray-100">RUT:</span>{" "}
+                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? '78.898.950-4' : 'RUT pendiente de confirmación'}
+              </p>
             </div>
 
             <h3 className="text-xl font-semibold text-white mb-2 mt-4">Supervisor</h3>
             <div className="bg-gray-900 p-4 rounded-lg space-y-2">
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Nombre:</span> Nombre apellido</p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Email:</span> correo@ejemplo.com</p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Teléfono:</span> +56912345678</p>
+              <p className="text-gray-300">
+                <span className="font-medium text-gray-100">Nombre:</span>{" "}
+                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? 'Celenia Ojeda' : 'Nombre pendiente de confirmación'}
+              </p>
+              <p className="text-gray-300">
+                <span className="font-medium text-gray-100">Email:</span>{" "}
+                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? 'notificaciones@sideciltda.cl' : 'Email pendiente de confirmación'}
+              </p>
+              <p className="text-gray-300">
+                <span className="font-medium text-gray-100">Teléfono:</span>{" "}
+                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? '+56948473469' : 'Teléfono pendiente de confirmación'}
+              </p>
             </div>
           </div>
 
@@ -235,22 +342,31 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
             <h3 className="text-xl font-semibold text-white mb-2">Información</h3>
             <div className="bg-gray-900 p-4 rounded-lg">
               <p className="text-gray-300 text-center">
-                {industrialPracticeStatus === 'completada' ? 'TU PRÁCTICA HA SIDO APROBADA EXITOSAMENTE.' : 'TU PRÁCTICA ESTÁ EN PROCESO. INGRESA TU BITÁCORA DIARIA.'}
+                {industrialPracticeStatus === 'en_proceso' ? 'TU PRÁCTICA ESTÁ EN PROCESO. INGRESA TU BITÁCORA DIARIA.' :
+                 industrialPracticeStatus === 'completada' ? 'TU PRÁCTICA HA SIDO APROBADA EXITOSAMENTE.' :
+                 'TU PRÁCTICA ESTÁ EN ESPERA DE CONFIRMACIÓN.'}
               </p>
             </div>
 
             <h3 className="text-xl font-semibold text-white mb-2 mt-4">Última bitácora</h3>
             <div className="bg-gray-900 p-4 rounded-lg space-y-2">
-              <p className="text-gray-300"><span className="font-medium text-gray-100">{latestBitacora.date}</span></p>
-              <p className="text-gray-300">{latestBitacora.time}</p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Actividad desarrollada:</span></p>
-              <p className="text-gray-300 text-sm">{latestBitacora.developedActivity}</p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Actividad Pendiente:</span></p>
-              <p className="text-gray-300 text-sm">{latestBitacora.pendingActivity}</p>
+              {industrialPracticeStatus === 'en_espera' || (!latestBitacora.developedActivity && (industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada')) ? (
+                <p className="text-gray-300 text-center">Vacío</p>
+              ) : (
+                <>
+                  <p className="text-gray-300"><span className="font-medium text-gray-100">{latestBitacora.date}</span></p>
+                  <p className="text-gray-300">{latestBitacora.time}</p>
+                  <p className="text-gray-300"><span className="font-medium text-gray-100">Actividad desarrollada:</span></p>
+                  <p className="text-gray-300 text-sm">{latestBitacora.developedActivity}</p>
+                  <p className="text-gray-300"><span className="font-medium text-gray-100">Actividad Pendiente:</span></p>
+                  <p className="text-gray-300 text-sm">{latestBitacora.pendingActivity}</p>
+                </>
+              )}
             </div>
           </div>
         </div>
       )}
+
 
       {activeTab === 'bitácoras' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left min-h-[400px]"> {/* Added min-h for consistent display */}
@@ -258,21 +374,21 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
           <div className="space-y-4">
             <div className="bg-gray-900 p-4 rounded-lg">
               <div className="flex justify-between items-center text-white mb-4">
-                <span className="font-semibold text-lg">2025</span>
+                <span className="font-semibold text-lg">{currentYear}</span>
               </div>
               <div className="flex justify-between items-center text-white mb-4">
                 <button className="text-gray-400 hover:text-white"><ChevronDown size={20} className="rotate-90" /></button>
-                <span className="font-semibold">vie, 23 may</span>
+                <span className="font-semibold">{today.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
                 <button className="text-gray-400 hover:text-white"><ChevronDown size={20} className="-rotate-90" /></button>
               </div>
-              <div className="text-gray-400 text-center mb-2">mayo de 2025</div>
+              <div className="text-gray-400 text-center mb-2">{currentMonth} de {currentYear}</div>
               <div className="grid grid-cols-7 gap-1 text-center text-gray-400 text-sm mb-4">
                 <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
               </div>
               <div className="grid grid-cols-7 gap-1 text-center text-white">
                 {/* Días del calendario */}
                 {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                  <span key={day} className={`p-1 rounded-full ${day === 23 ? 'bg-orange-600' : ''} ${day === 20 || day === 24 || day === 27 || day === 30 ? 'text-green-400' : ''}`}>
+                  <span key={day} className={`p-1 rounded-full ${day === currentDay ? 'bg-orange-600' : ''}`}>
                     {day}
                   </span>
                 ))}
@@ -280,17 +396,23 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
             </div>
             <button
               onClick={() => setShowNewBitacoraForm(true)} // Muestra el formulario al hacer clic
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1"
+              disabled={industrialPracticeStatus === 'en_espera' || industrialPracticeStatus === 'completada'}
+              className={`w-full bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform
+                ${industrialPracticeStatus === 'en_espera' || industrialPracticeStatus === 'completada' ? 'opacity-50 cursor-not-allowed' : 'hover:bg-orange-700 hover:-translate-y-1'}`}
             >
               AÑADIR BITÁCORA DEL DÍA
             </button>
-            <button className="w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1">
+            <button
+              disabled={industrialPracticeStatus === 'en_espera' || industrialPracticeStatus === 'completada'}
+              className={`w-full bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform
+                ${industrialPracticeStatus === 'en_espera' || industrialPracticeStatus === 'completada' ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-600 hover:-translate-y-1'}`}
+            >
               DESCARGAR BITÁCORAS EN PDF
             </button>
           </div>
 
           {/* Columna derecha: Detalle de la bitácora o formulario de nueva bitácora */}
-          {showNewBitacoraForm ? (
+          {showNewBitacoraForm && industrialPracticeStatus !== 'en_espera' && industrialPracticeStatus !== 'completada' ? (
             <div className="bg-gray-900 p-6 rounded-lg space-y-4">
               <h3 className="text-xl font-semibold text-white mb-4">Nueva Bitácora</h3>
               <div className="grid grid-cols-2 gap-4">
@@ -362,24 +484,28 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
             </div>
           ) : (
             <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-white mb-2">Bitácora {latestBitacora.date.split(',')[0]}, {latestBitacora.date.split(',')[1]}</h3>
+              <h3 className="text-xl font-semibold text-white mb-2">
+                Bitácora {industrialPracticeStatus === 'en_espera' || (!latestBitacora.developedActivity && (industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada')) ? ' (Vacía)' : `${latestBitacora.date.split(',')[0]}, ${latestBitacora.date.split(',')[1]}`}
+              </h3>
               <div className="bg-gray-900 p-4 rounded-lg space-y-2">
-                <p className="text-gray-300">{latestBitacora.time}</p>
-                <p className="text-gray-300"><span className="font-medium text-gray-100">Actividad desarrollada:</span></p>
-                <p className="text-gray-300 text-sm">{latestBitacora.developedActivity}</p>
-                <p className="text-gray-300"><span className="font-medium text-gray-100">Actividad Pendiente:</span></p>
-                <p className="text-gray-300 text-sm">{latestBitacora.pendingActivity}</p>
-                <div className="flex justify-end space-x-2 mt-4">
-                  <button className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-gray-700"><Edit size={20} /></button>
-                  <button className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-gray-700"><Trash2 size={20} /></button>
-                </div>
+                {industrialPracticeStatus === 'en_espera' || (!latestBitacora.developedActivity && (industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada')) ? (
+                  <p className="text-gray-300 text-center">Vacío</p>
+                ) : (
+                  <>
+                    <p className="text-gray-300">{latestBitacora.time}</p>
+                    <p className="text-gray-300"><span className="font-medium text-gray-100">Actividad desarrollada:</span></p>
+                    <p className="text-gray-300 text-sm">{latestBitacora.developedActivity}</p>
+                    <p className="text-gray-300"><span className="font-medium text-gray-100">Actividad Pendiente:</span></p>
+                    <p className="text-gray-300 text-sm">{latestBitacora.pendingActivity}</p>
+                  </>
+                )}
               </div>
             </div>
           )}
         </div>
       )}
 
-      {industrialPracticeStatus === 'completada' && activeTab === 'informe' && (
+      {activeTab === 'informe' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left min-h-[400px]"> {/* Added min-h for consistent display */}
           <div className="space-y-4">
             <h3 className="text-xl font-semibold text-white mb-2">Tipo de tareas realizadas</h3>
@@ -453,22 +579,22 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
         </div>
       )}
 
-      {industrialPracticeStatus === 'completada' && activeTab === 'evaluacion' && (
+      {activeTab === 'evaluación' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left min-h-[400px]"> {/* Added min-h for consistent display */}
           <div className="space-y-4">
             <h3 className="text-xl font-semibold text-white mb-2">Notas</h3>
             <div className="bg-gray-900 p-4 rounded-lg space-y-2">
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Capacidad:</span></p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Confianza:</span></p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Aplicación o Empeño:</span></p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Adaptabilidad:</span></p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Iniciativa:</span></p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Aptitud para trabajar en equipo:</span></p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Conocimiento:</span></p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Asistencia y Puntualidad:</span></p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Logro de resultados:</span></p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Comunicación Efectiva:</span></p>
-              <p className="text-gray-300"><span className="font-medium text-gray-100">Manejo de TIC:</span></p>
+              <p className="text-gray-300 flex justify-between items-center"><span className="font-medium text-gray-100">Capacidad:</span> <span className="text-white">1</span></p>
+              <p className="text-gray-300 flex justify-between items-center"><span className="font-medium text-gray-100">Confianza:</span> <span className="text-white">1</span></p>
+              <p className="text-gray-300 flex justify-between items-center"><span className="font-medium text-gray-100">Aplicación o Empeño:</span> <span className="text-white">1</span></p>
+              <p className="text-gray-300 flex justify-between items-center"><span className="font-medium text-gray-100">Adaptabilidad:</span> <span className="text-white">1</span></p>
+              <p className="text-gray-300 flex justify-between items-center"><span className="font-medium text-gray-100">Iniciativa:</span> <span className="text-white">1</span></p>
+              <p className="text-gray-300 flex justify-between items-center"><span className="font-medium text-gray-100">Aptitud para trabajar en equipo:</span> <span className="text-white">1</span></p>
+              <p className="text-gray-300 flex justify-between items-center"><span className="font-medium text-gray-100">Conocimiento:</span> <span className="text-white">1</span></p>
+              <p className="text-gray-300 flex justify-between items-center"><span className="font-medium text-gray-100">Asistencia y Puntualidad:</span> <span className="text-white">1</span></p>
+              <p className="text-gray-300 flex justify-between items-center"><span className="font-medium text-gray-100">Logro de resultados:</span> <span className="text-white">1</span></p>
+              <p className="text-gray-300 flex justify-between items-center"><span className="font-medium text-gray-100">Comunicación Efectiva:</span> <span className="text-white">1</span></p>
+              <p className="text-gray-300 flex justify-between items-center"><span className="font-medium text-gray-100">Manejo de TIC:</span> <span className="text-white">1</span></p>
             </div>
           </div>
           <div className="space-y-4">
@@ -480,45 +606,98 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
         </div>
       )}
 
-      {activeTab === 'logs' && (
-        <div className="space-y-4 text-left min-h-[400px]"> {/* Added min-h for consistent display */}
-          <div className="bg-gray-900 p-4 rounded-lg">
-            <div className="bg-gray-800 p-3 rounded-lg mb-3">
-              <p className="text-gray-300 text-sm">
-                <span className="font-medium text-gray-100">Sistema:</span> La práctica fue ingresada correctamente (Estado: Esperando confirmación del supervisor)
-              </p>
-              <p className="text-gray-500 text-xs text-right">domingo, 28 de mayo, 2025 - 17:48</p>
-            </div>
-            <div className="bg-gray-800 p-3 rounded-lg mb-3">
-              <p className="text-gray-300 text-sm">
-                <span className="font-medium text-gray-100">Sistema:</span> La práctica fue confirmada por tu Supervisor (Estado: En proceso)
-              </p>
-              <p className="text-gray-500 text-xs text-right">lunes, 29 de mayo, 2025 - 19:14</p>
+      {activeTab === 'estado' && (
+        <div className="space-y-4 text-left min-h-[400px]">
+          <style>
+            {`
+            @keyframes pulse-orange {
+              0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+              }
+              50% {
+                transform: scale(1.1);
+                opacity: 0.7;
+              }
+            }
+            .pulse-animation {
+              animation: pulse-orange 1.5s infinite ease-in-out;
+            }
+            `}
+          </style>
+          <div className="bg-gray-900 p-4 rounded-lg flex flex-col items-center justify-center">
+            <h3 className="text-xl font-semibold text-white mb-6">Progreso de la Práctica</h3>
+            <div className="flex items-center justify-between w-full max-w-md mb-8 relative">
+              {/* Círculo "En espera..." */}
+              <div className="flex flex-col items-center">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl transition-colors duration-500
+                  ${industrialPracticeStatus === 'en_espera' || industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? 'bg-orange-600' : 'bg-gray-700'}
+                  ${industrialPracticeStatus === 'en_espera' ? 'pulse-animation' : ''}`}>
+                  1
+                </div>
+                <span className="text-gray-300 text-sm mt-2 whitespace-nowrap">En espera...</span>
+              </div>
+
+              {/* Línea divisoria entre 1 y 2 */}
+              <div className={`flex-grow border-t-4 border-dashed mx-2 transition-colors duration-500
+                ${industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? 'border-orange-600' : 'border-gray-700'}`}></div>
+
+              {/* Círculo "Práctica confirmada" */}
+              <div className="flex flex-col items-center">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl transition-colors duration-500
+                  ${industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? 'bg-orange-600' : 'bg-gray-700'}
+                  ${industrialPracticeStatus === 'en_proceso' ? 'pulse-animation' : ''}`}>
+                  2
+                </div>
+                <span className="text-gray-300 text-sm mt-2 whitespace-nowrap">Práctica confirmada</span>
+              </div>
+
+              {/* Línea divisoria entre 2 y 3 */}
+              <div className={`flex-grow border-t-4 border-dashed mx-2 transition-colors duration-500
+                ${industrialPracticeStatus === 'completada' ? 'border-orange-600' : 'border-gray-700'}`}></div>
+
+              {/* Círculo "Práctica finalizada" */}
+              <div className="flex flex-col items-center">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl transition-colors duration-500
+                  ${industrialPracticeStatus === 'completada' ? 'bg-orange-600' : 'bg-gray-700'}
+                  ${industrialPracticeStatus === 'completada' ? 'pulse-animation' : ''}`}>
+                  3
+                </div>
+                <span className="text-gray-300 text-sm mt-2 whitespace-nowrap">Práctica finalizada</span>
+              </div>
             </div>
           </div>
-          <div className="flex items-center bg-gray-900 p-2 rounded-lg border border-gray-700">
-            <input
-              type="text"
-              placeholder="Ingresa Mensaje"
-              className="flex-grow bg-transparent text-white placeholder-gray-500 focus:outline-none p-2"
-            />
-            <button className="bg-orange-600 hover:bg-orange-700 text-white p-2 rounded-full transition-colors duration-200">
-              <Send size={20} />
-            </button>
+          <div className="bg-gray-900 p-4 rounded-lg border border-gray-700 text-center">
+            {industrialPracticeStatus === 'en_espera' && (
+              <p className="text-gray-300 text-lg">Tu práctica está en espera de confirmación. Te notificaremos cuando haya cambios.</p>
+            )}
+            {industrialPracticeStatus === 'en_proceso' && (
+              <p className="text-gray-300 text-lg">¡Tu práctica ha sido confirmada! Puedes comenzar a ingresar bitácoras.</p>
+            )}
+            {industrialPracticeStatus === 'completada' && (
+              <p className="text-gray-300 text-lg">¡Felicidades! Tu práctica ha sido completada exitosamente.</p>
+            )}
           </div>
         </div>
       )}
 
       {activeTab === 'solicitudes' && (
-        <div className="text-center py-10 min-h-[400px]"> {/* Added min-h for consistent display */}
+        <div className="text-center py-10 min-h-[400px] flex flex-col items-center justify-between">
           <p className="text-gray-300 text-lg mb-8">
             En esta sección podrás hacer una solicitud para cambiar algún dato o configuración de tu práctica.
           </p>
-          <img
-            src="https://placehold.co/200x200/333333/FFFFFF?text=Sin+Solicitudes"
-            alt="No hay solicitudes"
-            className="mx-auto mb-8 rounded-full"
-          />
+          <div className="flex-grow flex items-center justify-center">
+            {/* SVG custom icon: Magnifying glass with a cross */}
+            <svg width="150" height="150" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Handle of the magnifying glass */}
+              <rect x="130" y="130" width="10" height="50" rx="5" transform="rotate(45 130 130)" fill="#F97316"/>
+              {/* Magnifying glass circle */}
+              <circle cx="100" cy="100" r="40" stroke="#F97316" strokeWidth="10"/>
+              {/* Cross in the center */}
+              <line x1="80" y1="100" x2="120" y2="100" stroke="#F97316" strokeWidth="5" strokeLinecap="round"/>
+              <line x1="100" y1="80" x2="100" y2="120" stroke="#F97316" strokeWidth="5" strokeLinecap="round"/>
+            </svg>
+          </div>
           <p className="text-gray-400 mb-8">No has realizado ninguna solicitud</p>
           <button className="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1">
             + AÑADIR SOLICITUD
@@ -527,32 +706,38 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
       )}
 
       {/* Botones al final */}
-      {industrialPracticeStatus === 'en_proceso' && ( // Only show TERMINAR PRÁCTICA if in_process
+      {industrialPracticeStatus === 'en_proceso' ? (
         <div className="flex justify-end items-center mt-6 pt-4 border-t border-gray-700">
-          <button className="text-red-500 hover:text-red-700 mr-4 transition-colors duration-200">
-            <Trash2 size={24} />
-          </button>
           <button
-            onClick={handleTerminarPractica} // Llama a la función para terminar la práctica
+            onClick={handleTerminarPractica}
             className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-0.5"
           >
             TERMINAR PRÁCTICA
           </button>
         </div>
-      )}
+      ) : industrialPracticeStatus === 'en_espera' ? (
+        <div className="flex justify-end items-center mt-6 pt-4 border-t border-gray-700">
+          <button
+            onClick={handleSkipPractice}
+            className="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-0.5"
+          >
+            SKIP
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 };
 
 
 // Componente de la página "Mis Prácticas"
-const MyPracticesPage = ({ navigate, industrialPracticeStatus, setIndustrialPracticeStatus }) => { // Added setIndustrialPracticeStatus here
+const MyPracticesPage = ({ navigate, industrialPracticeStatus, setIndustrialPracticeStatus, practiceCategory, practiceStartDate, practiceEndDate, setPracticeDates }) => {
   return (
     <div className="p-6">
       <h2 className="text-3xl font-bold text-white mb-6">Mis Prácticas</h2>
 
       <div className="space-y-4">
-        {/* Práctica Industrial: ahora con estado "No iniciada", "En Proceso" o "Completada" */}
+        {/* Práctica Industrial: ahora con estado "No iniciada", "En Proceso", "En espera" o "Completada" */}
         <PracticeCard
           title="Práctica Industrial"
           status={
@@ -560,6 +745,8 @@ const MyPracticesPage = ({ navigate, industrialPracticeStatus, setIndustrialPrac
               ? 'En Proceso'
               : industrialPracticeStatus === 'completada'
               ? 'Completada'
+              : industrialPracticeStatus === 'en_espera'
+              ? 'En espera'
               : 'No iniciada'
           }
           statusColor={
@@ -567,23 +754,38 @@ const MyPracticesPage = ({ navigate, industrialPracticeStatus, setIndustrialPrac
               ? 'text-yellow-400'
               : industrialPracticeStatus === 'completada'
               ? 'text-green-400'
+              : industrialPracticeStatus === 'en_espera'
+              ? 'text-gray-400' // Changed to gray for "En espera" text on the card
               : 'text-red-400'
           }
         >
-          {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? (
+          {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' || industrialPracticeStatus === 'en_espera' ? (
             <IndustrialPracticeDetails
               setIndustrialPracticeStatus={setIndustrialPracticeStatus}
               navigate={navigate}
               industrialPracticeStatus={industrialPracticeStatus} // Pass industrialPracticeStatus to details
+              practiceCategory={practiceCategory}
+              setPracticeDates={setPracticeDates} // Pass the setter function
+              practiceStartDate={practiceStartDate}
+              practiceEndDate={practiceEndDate}
             />
           ) : (
             <>
               <p className="text-gray-300 mb-4">
                 Detalles de tu práctica industrial. Actualmente no hay un proceso activo.
               </p>
+              <div className="flex flex-col items-center justify-center p-8 bg-gray-700 rounded-lg shadow-inner">
+                <Briefcase size={64} className="text-orange-400 mb-4" />
+                <p className="text-gray-200 text-lg text-center mb-4">
+                  Inicia tu experiencia profesional registrando tu práctica industrial. Sigue los pasos para completar la inscripción.
+                </p>
+                <p className="text-gray-400 text-sm text-center">
+                  Una vez inscrita, podrás gestionar tus bitácoras y ver el progreso de tu práctica.
+                </p>
+              </div>
               <button
                 onClick={() => navigate('enroll-practice')}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg"
+                className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg mt-6"
               >
                 Inscribir Prácticas
               </button>
@@ -605,9 +807,22 @@ const MyPracticesPage = ({ navigate, industrialPracticeStatus, setIndustrialPrac
 };
 
 // Componente de la nueva página "Inscribir Práctica"
-const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus }) => {
+const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPracticeCategory, setPracticeDates }) => {
   const [currentStep, setCurrentStep] = useState(1); // Estado para controlar el paso actual (1: Tipo, 2: Categoría, etc.)
-  const [practiceType, setPracticeType] = useState(null); // 'iniciar' o 'convalidar'
+  const [practiceType, setPracticeTypeState] = useState(null); // 'iniciar' o 'convalidar'
+  const [practiceCategoryState, setPracticeCategoryState] = useState(null); // 'empresa', 'investigativa', 'industrial', 'profesional', 'emprendimiento'
+  const [meetsRequirements, setMeetsRequirements] = useState(false); // Si cumple los requisitos
+  const [formData, setFormData] = useState({ // Datos del formulario
+    companyName: '',
+    companyAddress: '',
+    companyRut: '',
+    supervisorName: '',
+    supervisorEmail: '',
+    supervisorPhone: '',
+    startDate: '',
+    hours: '324', // Default to 324 hours
+  });
+
   const totalSteps = 4;
   const stepNames = ['Tipo', 'Categoría', 'Requisitos', 'Datos'];
 
@@ -630,14 +845,34 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus }) => {
 
   // Función para seleccionar el tipo de práctica (Iniciar o Convalidar)
   const selectPracticeType = (type) => {
-    setPracticeType(type);
-    handleNextStep();
+    setPracticeTypeState(type);
+    handleNextStep(); // Automatically move to the next step
+  };
+
+  // Función para seleccionar la categoría de práctica
+  const selectPracticeCategoryAndNavigate = (category) => {
+    setPracticeCategoryState(category);
+    setPracticeCategory(category); // Update parent state
+    handleNextStep(); // Automatically move to the next step
+  };
+
+  // Maneja el cambio en los campos del formulario de datos
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   // Función para finalizar la inscripción y cambiar el estado de la práctica
   const handleIngresarPractica = () => {
-    setIndustrialPracticeStatus('en_proceso'); // Cambiar el estado de la práctica industrial a "En proceso"
-    alert('¡Práctica modelada con éxito!'); // Mensaje de confirmación
+    setIndustrialPracticeStatus('en_espera'); // Cambiar el estado de la práctica industrial a "En espera"
+    // Replaced alert with a custom message box for better UX
+    const messageBox = document.createElement('div');
+    messageBox.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-green-600 text-white p-4 rounded-lg shadow-lg z-[9999]';
+    messageBox.textContent = '¡Práctica ingresada con éxito! Esperando confirmación.';
+    document.body.appendChild(messageBox);
+    setTimeout(() => {
+      document.body.removeChild(messageBox);
+    }, 3000);
     navigate('my-practices'); // Redirigir a la página "Mis Prácticas"
   };
 
@@ -645,528 +880,463 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus }) => {
     <div className="p-6">
       <h2 className="text-3xl font-bold text-white mb-6">Inscribir Práctica</h2>
 
-      {/* Navegación por pasos */}
-      <div className="bg-gray-800 p-4 rounded-xl shadow-lg mb-6">
-        <div className="flex justify-around text-gray-400 font-semibold">
-          {stepNames.map((stepName, index) => (
-            <div
-              key={stepName}
-              className={`py-2 px-4 rounded-lg transition-colors duration-200 flex items-center
-                ${currentStep === index + 1 ? 'text-orange-500' : 'text-gray-400'}
-                ${currentStep > index + 1 ? 'text-green-500' : ''}`}
-            >
-              {currentStep > index + 1 ? (
-                <CheckCircle size={20} className="mr-2" />
-              ) : (
-                <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mr-2
-                  ${currentStep === index + 1 ? 'border-orange-500' : 'border-gray-500'}
-                  ${currentStep > index + 1 ? 'border-green-500' : 'border-gray-500'}
-                `}>
-                  {index + 1}
-                </span>
-              )}
-              {stepName}
-            </div>
+      {/* Barra de progreso */}
+      <div className="mb-8">
+        <div className="flex justify-between text-gray-400 text-sm mb-2">
+          {stepNames.map((name, index) => (
+            <span key={name} className={`${index + 1 <= currentStep ? 'text-orange-500 font-semibold' : ''}`}>
+              Paso {index + 1}: {name}
+            </span>
           ))}
+        </div>
+        <div className="w-full bg-gray-700 rounded-full h-2.5">
+          <div
+            className="bg-orange-500 h-2.5 rounded-full transition-all duration-500 ease-in-out"
+            style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+          ></div>
         </div>
       </div>
 
-      {/* Contenido principal de la página de inscripción */}
-      <div className="bg-gray-800 p-8 rounded-xl shadow-lg text-center">
-        {currentStep === 1 && ( // Paso "Tipo"
-          <>
-            <p className="text-gray-300 text-lg mb-8">Escoge el tipo de práctica que quieres realizar</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Opción: Iniciar una práctica en una empresa o institución */}
-              <div
+      <div className="bg-gray-800 p-8 rounded-xl shadow-lg min-h-[500px] flex flex-col justify-between">
+        {/* Contenido de los pasos */}
+        {currentStep === 1 && (
+          <div className="text-center flex flex-col justify-center flex-grow">
+            <h3 className="text-2xl font-semibold text-white mb-12">Selecciona el tipo de práctica</h3> {/* Increased mb-6 to mb-12 */}
+            <div className="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-6">
+              <button
                 onClick={() => selectPracticeType('iniciar')}
-                className="bg-gray-900 p-6 rounded-xl shadow-md border border-gray-700 flex flex-col items-center justify-center transition-transform duration-200 hover:scale-[1.02] cursor-pointer"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex flex-col items-center"
               >
-                <img
-                  src="https://placehold.co/150x150/333333/FFFFFF?text=Iniciar+Pr%C3%A1ctica"
-                  alt="Iniciar una práctica en una empresa o institución"
-                  className="mb-4 rounded-full"
-                />
-                <h3 className="text-xl font-semibold text-white mb-2">Iniciar una práctica en una empresa o institución</h3>
-                <p className="text-gray-400 text-sm">
-                  Busca y postula a ofertas de prácticas disponibles en diversas empresas.
-                </p>
-              </div>
-
-              {/* Opción: Convalidar una práctica */}
-              <div
+                <Plus size={32} className="mb-2" />
+                Iniciar Práctica
+              </button>
+              <button
                 onClick={() => selectPracticeType('convalidar')}
-                className="bg-gray-900 p-6 rounded-xl shadow-md border border-gray-700 flex flex-col items-center justify-center transition-transform duration-200 hover:scale-[1.02] cursor-pointer"
+                className="bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex flex-col items-center"
               >
-                <img
-                  src="https://placehold.co/150x150/333333/FFFFFF?text=Convalidar+Pr%C3%A1ctica"
-                  alt="Convalidar una práctica"
-                  className="mb-4 rounded-full"
-                />
-                <h3 className="text-xl font-semibold text-white mb-2">Convalidar una práctica</h3>
-                <p className="text-gray-400 text-sm">
-                  Presenta documentos para convalidar una práctica ya realizada.
-                </p>
-              </div>
+                <CheckCircle size={32} className="mb-2" />
+                Convalidar Práctica
+              </button>
             </div>
-          </>
+          </div>
         )}
 
-        {currentStep === 2 && practiceType === 'iniciar' && ( // Paso "Categoría" para Iniciar Práctica
-          <>
-            <p className="text-gray-300 text-lg mb-8">Escoge en que categoria estaria tu práctica</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Opción: Realizarás una práctica común en una empresa */}
-              <div
-                onClick={handleNextStep} // Al hacer clic, avanza a Requisitos
-                className="bg-gray-900 p-6 rounded-xl shadow-md border border-gray-700 flex flex-col items-center justify-center transition-transform duration-200 hover:scale-[1.02] cursor-pointer"
-              >
-                <img
-                  src="https://placehold.co/150x150/333333/FFFFFF?text=Pr%C3%A1ctica+Com%C3%BAn"
-                  alt="Realizarás una práctica común en una empresa"
-                  className="mb-4 rounded-full"
-                />
-                <h3 className="text-xl font-semibold text-white mb-2">Realizarás una práctica común en una empresa</h3>
-                <p className="text-gray-400 text-sm">
-                  Una práctica estándar enfocada en el desarrollo de habilidades profesionales.
-                </p>
-              </div>
-
-              {/* Opción: Realizarás una práctica investigativa */}
-              <div
-                onClick={handleNextStep} // Al hacer clic, avanza a Requisitos
-                className="bg-gray-900 p-6 rounded-xl shadow-md border border-gray-700 flex flex-col items-center justify-center transition-transform duration-200 hover:scale-[1.02] cursor-pointer"
-              >
-                <img
-                  src="https://placehold.co/150x150/333333/FFFFFF?text=Pr%C3%A1ctica+Investigativa"
-                  alt="Realizarás una práctica investigativa"
-                  className="mb-4 rounded-full"
-                />
-                <h3 className="text-xl font-semibold text-white mb-2">Realizarás una práctica investigativa</h3>
-                <p className="text-gray-400 text-sm">
-                  Una práctica centrada en la investigación y el desarrollo de nuevos conocimientos.
-                </p>
-              </div>
+        {currentStep === 2 && (
+          <div className="text-center flex flex-col justify-center flex-grow">
+            <h3 className="text-2xl font-semibold text-white mb-12">Selecciona la categoría de práctica</h3> {/* Increased mb-6 to mb-12 */}
+            <div className="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-6">
+              {practiceType === 'iniciar' && (
+                <>
+                  <button
+                    onClick={() => selectPracticeCategoryAndNavigate('empresa')}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex flex-col items-center"
+                  >
+                    <Building size={32} className="mb-2" />
+                    Práctica en una empresa
+                  </button>
+                  <button
+                    onClick={() => selectPracticeCategoryAndNavigate('investigativa')}
+                    className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-4 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex flex-col items-center"
+                  >
+                    <Search size={32} className="mb-2" />
+                    Práctica investigativa
+                  </button>
+                </>
+              )}
+              {practiceType === 'convalidar' && (
+                <>
+                  <button
+                    onClick={() => selectPracticeCategoryAndNavigate('empresa_institucion')}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex flex-col items-center"
+                  >
+                    <Building size={32} className="mb-2" />
+                    Empresa o Institución
+                  </button>
+                  <button
+                    onClick={() => selectPracticeCategoryAndNavigate('investigativa')}
+                    className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-4 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex flex-col items-center"
+                  >
+                    <Search size={32} className="mb-2" />
+                    Investigativa
+                  </button>
+                  <button
+                    onClick={() => selectPracticeCategoryAndNavigate('trabajo_social')}
+                    className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-4 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex flex-col items-center"
+                  >
+                    <User size={32} className="mb-2" />
+                    Trabajo Social
+                  </button>
+                  <button
+                    onClick={() => selectPracticeCategoryAndNavigate('emprendimiento')}
+                    className="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-4 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex flex-col items-center"
+                  >
+                    <Lightbulb size={32} className="mb-2" />
+                    Emprendimiento
+                  </button>
+                </>
+              )}
             </div>
-          </>
+          </div>
         )}
 
-        {currentStep === 2 && practiceType === 'convalidar' && ( // Paso "Categoría" para Convalidar Práctica
-          <>
-            <p className="text-gray-300 text-lg mb-8">Escoge en que categoría estaria tu práctica</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {/* Opción: Trabajo profesional realizado en una empresa o institución */}
-              <div
-                onClick={handleNextStep} // Al hacer clic, avanza a Requisitos
-                className="bg-gray-900 p-6 rounded-xl shadow-md border border-gray-700 flex flex-col items-center justify-center transition-transform duration-200 hover:scale-[1.02] cursor-pointer"
-              >
-                <img
-                  src="https://placehold.co/150x150/333333/FFFFFF?text=Trabajo+Profesional"
-                  alt="Trabajo profesional realizado en una empresa o institución"
-                  className="mb-4 rounded-full"
-                />
-                <h3 className="text-xl font-semibold text-white mb-2">Trabajo profesional realizado en una empresa o institución</h3>
-              </div>
-
-              {/* Opción: Es una práctica investigativa */}
-              <div
-                onClick={handleNextStep} // Al hacer clic, avanza a Requisitos
-                className="bg-gray-900 p-6 rounded-xl shadow-md border border-gray-700 flex flex-col items-center justify-center transition-transform duration-200 hover:scale-[1.02] cursor-pointer"
-              >
-                <img
-                  src="https://placehold.co/150x150/333333/FFFFFF?text=Pr%C3%A1ctica+Investigativa"
-                  alt="Es una práctica investigativa"
-                  className="mb-4 rounded-full"
-                />
-                <h3 className="text-xl font-semibold text-white mb-2">Es una práctica investigativa</h3>
-              </div>
-
-              {/* Opción: Trabajo Social */}
-              <div
-                onClick={handleNextStep} // Al hacer clic, avanza a Requisitos
-                className="bg-gray-900 p-6 rounded-xl shadow-md border border-gray-700 flex flex-col items-center justify-center transition-transform duration-200 hover:scale-[1.02] cursor-pointer"
-              >
-                <img
-                  src="https://placehold.co/150x150/333333/FFFFFF?text=Trabajo+Social"
-                  alt="Trabajo Social"
-                  className="mb-4 rounded-full"
-                />
-                <h3 className="text-xl font-semibold text-white mb-2">Trabajo Social</h3>
-              </div>
-
-              {/* Opción: Emprendimiento */}
-              <div
-                onClick={handleNextStep} // Al hacer clic, avanza a Requisitos
-                className="bg-gray-900 p-6 rounded-xl shadow-md border border-gray-700 flex flex-col items-center justify-center transition-transform duration-200 hover:scale-[1.02] cursor-pointer"
-              >
-                <img
-                  src="https://placehold.co/150x150/333333/FFFFFF?text=Emprendimiento"
-                  alt="Emprendimiento"
-                  className="mb-4 rounded-full"
-                />
-                <h3 className="text-xl font-semibold text-white mb-2">Emprendimiento</h3>
-              </div>
+        {currentStep === 3 && (
+          <div className="text-left space-y-6">
+            <h3 className="text-2xl font-semibold text-white mb-4 flex items-center">
+              <Info size={28} className="text-orange-500 mr-3" />
+              Información para iniciar tu práctica
+            </h3>
+            <div className="bg-gray-900 p-6 rounded-lg space-y-4">
+              <p className="text-gray-300">
+                Para iniciar una práctica investigativa, el proceso es el mismo que con una empresa, necesitas haberte contactado con una institución y haber sido aceptado para realizar ahí tu práctica.
+              </p>
+              <p className="text-gray-300">
+                Una vez ya conseguida debes obtener los siguientes datos:
+              </p>
+              <ul className="list-disc list-inside text-gray-300 ml-4 space-y-2">
+                <li>Nombre, RUT y dirección de la institución.</li>
+                <li>Nombre, e-mail y teléfono de contacto de alguna persona de la institución la cual será el supervisor o supervisora que valide que estarás realizando tu práctica allí y posteriormente evaluará tu desempeño.</li>
+              </ul>
             </div>
-          </>
+            <div className="flex items-center mt-6">
+              <input
+                type="checkbox"
+                id="meetsRequirements"
+                checked={meetsRequirements}
+                onChange={(e) => setMeetsRequirements(e.target.checked)}
+                className="form-checkbox h-5 w-5 text-orange-600 bg-gray-700 border-gray-600 rounded focus:ring-orange-500"
+              />
+              <label htmlFor="meetsRequirements" className="ml-3 text-gray-300 text-lg">
+                Confirmo que cumplo con todos los requisitos.
+              </label>
+            </div>
+          </div>
         )}
 
-        {currentStep === 3 && practiceType === 'iniciar' && ( // Paso "Requisitos" para Iniciar Práctica
-          <>
-            <p className="text-gray-300 text-lg mb-8">
-              Para iniciar una práctica necesitas haberte contactado con una empresa y haber
-              sido aceptado para realizar ahí tu práctica.
-            </p>
-            <p className="text-gray-300 text-lg mb-4">
-              Una vez ya conseguida debes obtener los siguientes datos:
-            </p>
-            <ul className="text-gray-300 text-left list-disc list-inside space-y-2 mb-8">
-              <li>Nombre, RUT y dirección de la empresa.</li>
-              <li>Nombre, e-mail y telefono de contacto de alguna persona de la empresa la
-                cual sera el supervisor o supervisora que valide que estarás realizando tu
-                práctica alli y posteriormente evaluará tu desempeño
-              </li>
-            </ul>
-          </>
-        )}
-
-        {currentStep === 3 && practiceType === 'convalidar' && ( // Paso "Requisitos" para Convalidar Práctica
-          <>
-            <p className="text-gray-300 text-lg mb-8">
-              El trabajo tuvo que haber sido desarrollado en UNA sola empresa durante el triple del
-              tiempo a convalidar.
-            </p>
-            <p className="text-gray-300 text-lg mb-4">
-              Es necesario tener información de la empresa tal como Nombre, RUT y dirección.
-            </p>
-            <p className="text-gray-300 text-lg mb-4">
-              Algunos documentos que debes tener a mano son:
-            </p>
-            <ul className="text-gray-300 text-left list-disc list-inside space-y-2 mb-8">
-              <li>Certificado de imposiciones previsionales del tiempo que se trabajó, en caso de haber
-                emitido boletas, presentar copia de estas en donde se observen los datos de la empresa
-                en la cual trabajaste.
-              </li>
-              <li>Un Currículo que detalle las actividades realizadas en aquella empresa de no más de
-                una pagina.
-              </li>
-              <li>Una carta de su Jefe o Supervisor directo en la Empresa en que éste avala la calidad del
-                aporte realizado.
-              </li>
-            </ul>
-          </>
-        )}
-
-        {currentStep === 4 && practiceType === 'iniciar' && ( // Paso "Datos" para Iniciar Práctica
-          <>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 text-left">
-              {/* Datos de la Empresa */}
+        {currentStep === 4 && (
+          <div className="text-left space-y-4">
+            <h3 className="text-2xl font-semibold text-white mb-4">Datos de la Práctica</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Sección Empresa */}
               <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-white mb-2">Datos de la Empresa</h3>
-                <div className="bg-gray-900 p-4 rounded-lg flex items-center">
-                  <Briefcase size={20} className="text-gray-400 mr-3" />
+                <h4 className="text-xl font-semibold text-white flex items-center mb-2"><Building size={20} className="mr-2"/> Datos de la Empresa</h4>
+                <div>
+                  <label htmlFor="companyName" className="block text-gray-400 text-sm mb-1">Nombre de la Empresa:</label>
                   <input
                     type="text"
-                    placeholder="Empresa"
-                    className="flex-grow bg-transparent text-white placeholder-gray-500 focus:outline-none"
+                    id="companyName"
+                    name="companyName"
+                    value={formData.companyName}
+                    onChange={handleFormChange}
+                    className="w-full p-3 bg-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    placeholder="Ej: Google Chile"
                   />
-                  <Plus size={20} className="text-orange-500 cursor-pointer hover:text-orange-400" />
                 </div>
-                <input
-                  type="text"
-                  placeholder="RUT de la Empresa"
-                  className="w-full p-3 bg-gray-900 rounded-lg text-white placeholder-gray-500 focus:outline-none border border-gray-700"
-                />
-                <p className="text-gray-400 text-sm mt-4">
-                  A continuación, enumera formalmente las tareas realizadas, estas mismas serán
-                  enviadas a Dirección de Estudios para su aprobación.
-                </p>
-
-                <h3 className="text-xl font-semibold text-white mb-2 mt-6">Datos del Supervisor</h3>
-                <input
-                  type="text"
-                  placeholder="Nombre"
-                  className="w-full p-3 bg-gray-900 rounded-lg text-white placeholder-gray-500 focus:outline-none border border-gray-700"
-                  maxLength="25"
-                />
-                <input
-                  type="text"
-                  placeholder="Apellido"
-                  className="w-full p-3 bg-gray-900 rounded-lg text-white placeholder-gray-500 focus:outline-none border border-gray-700"
-                  maxLength="25"
-                />
-                <input
-                  type="email"
-                  placeholder="E-mail"
-                  className="w-full p-3 bg-gray-900 rounded-lg text-white placeholder-gray-500 focus:outline-none border border-gray-700"
-                  maxLength="50"
-                />
-                <input
-                  type="tel"
-                  placeholder="Teléfono"
-                  className="w-full p-3 bg-gray-900 rounded-lg text-white placeholder-gray-500 focus:outline-none border border-gray-700"
-                  maxLength="10"
-                />
-              </div>
-
-              {/* Datos de la práctica */}
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-white mb-2">Datos de la práctica</h3>
-                <div className="bg-gray-900 p-4 rounded-lg flex items-center">
-                  <Briefcase size={20} className="text-gray-400 mr-3" />
+                <div>
+                  <label htmlFor="companyAddress" className="block text-gray-400 text-sm mb-1">Dirección:</label>
                   <input
                     type="text"
-                    placeholder="Modo de Práctica"
-                    className="flex-grow bg-transparent text-white placeholder-gray-500 focus:outline-none"
+                    id="companyAddress"
+                    name="companyAddress"
+                    value={formData.companyAddress}
+                    onChange={handleFormChange}
+                    className="w-full p-3 bg-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    placeholder="Ej: Av. Isidora Goyenechea 3000"
                   />
-                  <ChevronDown size={20} className="text-gray-400" />
                 </div>
-                <input
-                  type="text"
-                  placeholder="Ingeniería Civil Informática"
-                  className="w-full p-3 bg-gray-900 rounded-lg text-white placeholder-gray-500 focus:outline-none border border-gray-700"
-                />
-                <input
-                  type="text"
-                  placeholder="Campus"
-                  className="w-full p-3 bg-gray-900 rounded-lg text-white placeholder-gray-500 focus:outline-none border border-gray-700"
-                />
-                <input
-                  type="date"
-                  placeholder="Fecha de inicio"
-                  className="w-full p-3 bg-gray-900 rounded-lg text-white placeholder-gray-500 focus:outline-none border border-gray-700"
-                />
+                <div>
+                  <label htmlFor="companyRut" className="block text-gray-400 text-sm mb-1">RUT de la Empresa:</label>
+                  <input
+                    type="text"
+                    id="companyRut"
+                    name="companyRut"
+                    value={formData.companyRut}
+                    onChange={handleFormChange}
+                    className="w-full p-3 bg-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    placeholder="Ej: 76.123.456-7"
+                  />
+                </div>
+              </div>
 
-                <h3 className="text-xl font-semibold text-white mb-2 mt-6">Consideración especial (opcional)</h3>
-                <p className="text-gray-400 text-sm mb-4">
-                  Si al momento de realizar la práctica tienes algún comentario respecto a alguna condición
-                  a considerar, por favor indícanoslo aquí. (Ej: Situación financiera, estás diagnosticado con
-                  TEA, entre otros...)
+              {/* Sección Supervisor */}
+              <div className="space-y-4">
+                <h4 className="text-xl font-semibold text-white flex items-center mb-2"><User size={20} className="mr-2"/> Datos del Supervisor</h4>
+                <div>
+                  <label htmlFor="supervisorName" className="block text-gray-400 text-sm mb-1">Nombre del Supervisor:</label>
+                  <input
+                    type="text"
+                    id="supervisorName"
+                    name="supervisorName"
+                    value={formData.supervisorName}
+                    onChange={handleFormChange}
+                    className="w-full p-3 bg-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    placeholder="Ej: Juan Pérez"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="supervisorEmail" className="block text-gray-400 text-sm mb-1">Email del Supervisor:</label>
+                  <input
+                    type="email"
+                    id="supervisorEmail"
+                    name="supervisorEmail"
+                    value={formData.supervisorEmail}
+                    onChange={handleFormChange}
+                    className="w-full p-3 bg-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    placeholder="Ej: juan.perez@empresa.com"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="supervisorPhone" className="block text-gray-400 text-sm mb-1">Teléfono del Supervisor:</label>
+                  <input
+                    type="tel"
+                    id="supervisorPhone"
+                    name="supervisorPhone"
+                    value={formData.supervisorPhone}
+                    onChange={handleFormChange}
+                    className="w-full p-3 bg-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    placeholder="Ej: +56912345678"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Sección Fechas y Horas */}
+            <div className="space-y-4 mt-6">
+              <h4 className="text-xl font-semibold text-white flex items-center mb-2"><CalendarDays size={20} className="mr-2"/> Detalles de la Práctica</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="startDate" className="block text-gray-400 text-sm mb-1">Fecha de Inicio:</label>
+                  <input
+                    type="date"
+                    id="startDate"
+                    name="startDate"
+                    value={formData.startDate}
+                    onChange={handleFormChange}
+                    className="w-full p-3 bg-gray-700 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="hours" className="block text-gray-400 text-sm mb-1">Horas Totales:</label>
+                  <select
+                    id="hours"
+                    name="hours"
+                    value={formData.hours}
+                    onChange={handleFormChange}
+                    className="w-full p-3 bg-gray-700 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  >
+                    <option value="162">162 horas</option>
+                    <option value="324">324 horas</option>
+                  </select>
+                </div>
+              </div>
+              <div className="mt-4">
+                <h4 className="text-xl font-semibold text-white flex items-center mb-2"><Lightbulb size={20} className="mr-2"/> Consideración especial (opcional)</h4>
+                <p className="text-gray-300 text-sm mb-2">
+                  Si al momento de realizar la práctica tienes algún comentario respecto a alguna
+                  condición a considerar, por favor indícanoslo aquí. (Ej: Situación financiera, estás
+                  diagnostificado con TEA, entre otros...)
+                </p>
+                <p className="text-gray-400 text-xs mb-4">
+                  Esta información será totalmente confidencial y solamente el profesor y
+                  ayudante encargados tendrán acceso.
                 </p>
                 <textarea
+                  id="specialConsideration"
+                  name="specialConsideration"
+                  value={formData.specialConsideration}
+                  onChange={handleFormChange}
+                  rows="4"
+                  className="w-full p-3 bg-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-orange-500 resize-none"
                   placeholder="Consideración especial"
-                  className="w-full p-3 bg-gray-900 rounded-lg text-white placeholder-gray-500 focus:outline-none border border-gray-700 h-24 resize-none"
                 ></textarea>
-                <p className="text-gray-400 text-sm mt-2">
-                  Esta información será totalmente confidencial y solamente el profesor y ayudante
-                  encargados tendrán acceso.
-                </p>
               </div>
             </div>
-          </>
+          </div>
         )}
 
-        {currentStep === 4 && practiceType === 'convalidar' && ( // Paso "Datos" para Convalidar Práctica
-          <>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 text-left">
-              {/* Datos de la Empresa */}
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-white mb-2">Datos de la Empresa</h3>
-                <div className="bg-gray-900 p-4 rounded-lg flex items-center">
-                  <Briefcase size={20} className="text-gray-400 mr-3" />
-                  <input
-                    type="text"
-                    placeholder="Empresa"
-                    className="flex-grow bg-transparent text-white placeholder-gray-500 focus:outline-none"
-                  />
-                  <Plus size={20} className="text-orange-500 cursor-pointer hover:text-orange-400" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="RUT de la Empresa"
-                  className="w-full p-3 bg-gray-900 rounded-lg text-white placeholder-gray-500 focus:outline-none border border-gray-700"
-                />
-                <p className="text-gray-400 text-sm mt-4">
-                  A continuación, enumera formalmente las tareas realizadas, estas mismas serán
-                  enviadas a Dirección de Estudios para su aprobación.
-                </p>
-                <textarea
-                  placeholder="Resumen de las tareas realizadas"
-                  className="w-full p-3 bg-gray-900 rounded-lg text-white placeholder-gray-500 focus:outline-none border border-gray-700 h-24 resize-none"
-                ></textarea>
-
-                <h3 className="text-xl font-semibold text-white mb-2 mt-6">Datos del Alumno</h3>
-                <p className="text-gray-400 text-sm mb-4">
-                  A continuación sube tu currículum donde esté especificado el trabajo realizado, los boletos o
-                  cotizaciones que generaste por este trabajo y una carta de un jefe o supervisor directo en la empresa
-                  en la que valide la calidad de tu trabajo realizado.
-                </p>
-                <div className="bg-gray-900 p-4 rounded-lg flex items-center justify-between border border-gray-700">
-                  <span className="text-gray-500">Currículum actualizado</span>
-                  <Upload size={20} className="text-orange-500 cursor-pointer hover:text-orange-400" />
-                </div>
-                <div className="bg-gray-900 p-4 rounded-lg flex items-center justify-between border border-gray-700">
-                  <span className="text-gray-500">Boletas emitidas o Certificado de Imposiciones previsionales</span>
-                  <Upload size={20} className="text-orange-500 cursor-pointer hover:text-orange-400" />
-                </div>
-                <div className="bg-gray-900 p-4 rounded-lg flex items-center justify-between border border-gray-700">
-                  <span className="text-gray-500">Carta de Jefe o Supervisor directo en la empresa</span>
-                  <Upload size={20} className="text-orange-500 cursor-pointer hover:text-orange-400" />
-                </div>
-              </div>
-
-              {/* Datos de la práctica */}
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-white mb-2">Datos de la práctica</h3>
-                <div className="bg-gray-900 p-4 rounded-lg flex items-center">
-                  <Briefcase size={20} className="text-gray-400 mr-3" />
-                  <input
-                    type="text"
-                    placeholder="Modo de Práctica"
-                    className="flex-grow bg-transparent text-white placeholder-gray-500 focus:outline-none"
-                  />
-                  <ChevronDown size={20} className="text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Ingeniería Civil Informática"
-                  className="w-full p-3 bg-gray-900 rounded-lg text-white placeholder-gray-500 focus:outline-none border border-gray-700"
-                />
-                <input
-                  type="text"
-                  placeholder="Campus"
-                  className="w-full p-3 bg-gray-900 rounded-lg text-white placeholder-gray-500 focus:outline-none border border-gray-700"
-                />
-                <p className="text-gray-400 text-sm mt-4">
-                  A continuación indicamos las fechas entre las cuales estuviste trabajando:
-                </p>
-                <input
-                  type="date"
-                  placeholder="Fecha de inicio"
-                  className="w-full p-3 bg-gray-900 rounded-lg text-white placeholder-gray-500 focus:outline-none border border-gray-700"
-                />
-                <input
-                  type="date"
-                  placeholder="Fecha de término"
-                  className="w-full p-3 bg-gray-900 rounded-lg text-white placeholder-gray-500 focus:outline-none border border-gray-700"
-                />
-
-                <h3 className="text-xl font-semibold text-white mb-2 mt-6">Consideración especial (opcional)</h3>
-                <p className="text-gray-400 text-sm mb-4">
-                  Si al momento de realizar la práctica tienes algún comentario respecto a alguna condición
-                  a considerar, por favor indícanoslo aquí. (Ej: Situación financiera, estás diagnosticado con
-                  TEA, entre otros...)
-                </p>
-                <textarea
-                  placeholder="Consideración especial"
-                  className="w-full p-3 bg-gray-900 rounded-lg text-white placeholder-gray-500 focus:outline-none border border-gray-700 h-24 resize-none"
-                ></textarea>
-                <p className="text-gray-400 text-sm mt-2">
-                  Esta información será totalmente confidencial y solamente el profesor y ayudante
-                  encargados tendrán acceso.
-                </p>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Controles de navegación de pasos */}
-      <div className="flex justify-between mt-8">
-        <button
-          onClick={handlePreviousStep}
-          className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1"
-        >
-          &lt; Atrás
-        </button>
-
-        {currentStep === 3 && ( // Botón Continuar solo en la sección de Requisitos
+        {/* Botones de navegación de pasos */}
+        <div className="flex justify-between mt-8 pt-4 border-t border-gray-700">
           <button
-            onClick={handleNextStep}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg ml-auto"
+            onClick={handlePreviousStep}
+            className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-0.5"
           >
-            Continuar &gt;
+            {currentStep === 1 ? 'CANCELAR' : 'ANTERIOR'}
           </button>
-        )}
-
-        {currentStep === 4 && ( // Botón Ingresar Práctica en la sección de Datos
-          <button
-            onClick={handleIngresarPractica} // Llama a la nueva función
-            className="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg ml-auto"
-          >
-            INGRESAR PRÁCTICA
-          </button>
-        )}
+          {currentStep < totalSteps && currentStep !== 1 ? ( // Only show SIGUIENTE if not step 1
+            <button
+              onClick={handleNextStep}
+              disabled={currentStep === 3 && !meetsRequirements} // Deshabilita si no se cumplen los requisitos en el paso 3
+              className={`bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-0.5
+                ${currentStep === 3 && !meetsRequirements ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              SIGUIENTE
+            </button>
+          ) : currentStep === totalSteps ? (
+            <button
+              onClick={handleIngresarPractica}
+              className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-0.5"
+            >
+              INGRESAR PRÁCTICA
+            </button>
+          ) : null} {/* Render nothing for SIGUIENTE button on Step 1 */}
+        </div>
       </div>
     </div>
   );
 };
 
 
-// Componentes Placeholder para otras páginas
-const PlaceholderPage = ({ title }) => (
-  <div className="flex flex-col items-center justify-center min-h-screen p-4 text-white">
-    <div className="bg-gray-800 p-8 rounded-xl shadow-2xl max-w-md w-full text-center">
-      <h2 className="text-3xl font-bold mb-4">{title}</h2>
-      <p className="text-gray-300">Contenido para la sección de {title}. ¡Próximamente!</p>
+// Componente para mostrar una tarjeta de oferta de práctica
+const OfferCard = ({ company, location, contact, details, date }) => (
+  <div className="bg-gray-800 p-6 rounded-xl shadow-lg mb-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-4">
+      <div className="flex items-center">
+        <Building size={20} className="text-orange-500 mr-2" />
+        <span className="text-gray-300 font-medium">Empresa:</span>
+        <span className="text-white ml-2">{company}</span>
+      </div>
+      <div className="flex items-center">
+        <MapPin size={20} className="text-orange-500 mr-2" />
+        <span className="text-gray-300 font-medium">Ubicación:</span>
+        <span className="text-white ml-2">{location}</span>
+      </div>
+      <div className="flex items-center">
+        <Mail size={20} className="text-orange-500 mr-2" />
+        <span className="text-gray-300 font-medium">Contactar a:</span>
+        <a href={`mailto:${contact}`} className="text-blue-400 hover:underline ml-2 break-all">{contact}</a>
+      </div>
+    </div>
+    <div className="border-t border-gray-700 pt-4 mt-4">
+      <h4 className="text-lg font-semibold text-white mb-2">Detalles:</h4>
+      <p className="text-gray-300 text-sm whitespace-pre-line">{details}</p>
+      <p className="text-gray-500 text-xs text-right mt-4">{date}</p>
     </div>
   </div>
 );
 
-// Componente de la página de Ofertas
+// Componente de la página "Ofertas"
 const OffersPage = () => {
+  const offers = [
+    {
+      company: 'TS Latam SpA',
+      location: 'Santiago, Chile',
+      contact: 'marcoignacio@tslatam.com',
+      details: 'Empresa informática dedicada al desarrollo de aplicaciones web para la industria del turismo, ecommerce y pagos.',
+      date: 'miércoles, 8 de noviembre, 2023',
+    },
+    {
+      company: 'Heitmann Ingeniería y Asesoría Ltda',
+      location: 'Villa Alemana, Chile',
+      contact: 'administracion@heitmann.cl',
+      details: 'Práctica para técnico universitario electrónico\nNúmero de cupos: 1\nHorario: lunes a jueves, de 8.30 a 18.00, con 1 hora de colación, y los viernes de 7.30 a 17.00, con 1 hora de colación.\nPago práctica: 80.000 líquidos mensuales\nLugar de práctica: Ojos de Agua 219, Villa Alemana',
+      date: 'jueves, 12 de octubre, 2023',
+    },
+  ];
+
   return (
-    <div className="p-6">
-      <h2 className="text-3xl font-bold text-white mb-6">Ofertas de Prácticas</h2>
-
+    <div className="p-6 text-white">
+      <h2 className="text-3xl font-bold mb-6">Ofertas de Prácticas</h2>
       <div className="space-y-6">
-        {/* Oferta 1 */}
-        <div className="bg-gray-800 p-6 rounded-xl shadow-lg">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-4">
-            <div className="flex items-center text-white">
-              <Briefcase size={20} className="mr-2 text-gray-400" />
-              <span className="font-semibold text-lg">Empresa: TS Latam SpA</span>
-            </div>
-            <div className="flex items-center text-white">
-              <MapPin size={20} className="mr-2 text-gray-400" />
-              <span className="text-lg">Ubicación: Santiago, Chile</span>
-            </div>
-            <div className="flex items-center text-white">
-              <Mail size={20} className="mr-2 text-gray-400" />
-              <span className="text-lg">Contacto: marcoignacio@tslatam.com</span>
-            </div>
-          </div>
-          <h3 className="text-xl font-semibold text-white mb-2">Detalles:</h3>
-          <p className="text-gray-300 mb-4">
-            Empresa informática dedicada al desarrollo de aplicaciones web para la industria del turismo, ecommerce y pagos.
-          </p>
-          <p className="text-gray-500 text-sm text-right">miércoles, 8 de noviembre, 2023</p>
-        </div>
-
-        {/* Oferta 2 */}
-        <div className="bg-gray-800 p-6 rounded-xl shadow-lg">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-4">
-            <div className="flex items-center text-white">
-              <Briefcase size={20} className="mr-2 text-gray-400" />
-              <span className="font-semibold text-lg">Empresa: Heitmann Ingeniería y Asesoría Ltda</span>
-            </div>
-            <div className="flex items-center text-white">
-              <MapPin size={20} className="mr-2 text-gray-400" />
-              <span className="text-lg">Ubicación: Villa Alemana, Chile</span>
-            </div>
-            <div className="flex items-center text-white">
-              <Mail size={20} className="mr-2 text-gray-400" />
-              <span className="text-lg">Contacto: administracion@heitmann.cl</span>
-            </div>
-          </div>
-          <h3 className="text-xl font-semibold text-white mb-2">Detalles:</h3>
-          <p className="text-gray-300 mb-1">Práctica para técnico universitario electrónico</p>
-          <p className="text-gray-300 mb-1">Número de cupos: 1</p>
-          <p className="text-gray-300 mb-1">Horario: lunes a jueves, de 8.30 a 18.00, con 1 hora de colación, y los viernes de 7.30 a 17.00, con 1 hora de colación.</p>
-          <p className="text-gray-300 mb-1">Pago práctica: 80.000 líquidos mensuales</p>
-          <p className="text-gray-300 mb-4">Lugar de práctica: Ojos de Agua 219, Villa Alemana</p>
-          <p className="text-gray-500 text-sm text-right">jueves, 12 de octubre, 2023</p>
-        </div>
+        {offers.map((offer, index) => (
+          <OfferCard
+            key={index}
+            company={offer.company}
+            location={offer.location}
+            contact={offer.contact}
+            details={offer.details}
+            date={offer.date}
+          />
+        ))}
       </div>
     </div>
   );
 };
 
+// Placeholder components for other pages
+const MyProfilePage = () => (
+  <div className="p-6 text-white">
+    <h2 className="text-3xl font-bold mb-6">Mi Perfil</h2>
+    <div className="bg-gray-800 p-8 rounded-xl shadow-lg min-h-[400px] flex items-center justify-center">
+      <p className="text-gray-300 text-lg">Contenido de la página "Mi Perfil" en construcción.</p>
+    </div>
+  </div>
+);
 
-// Componente principal de la aplicación
+const CompaniesPage = () => (
+  <div className="p-6 text-white">
+    <h2 className="text-3xl font-bold mb-6">Empresas</h2>
+    <div className="bg-gray-800 p-8 rounded-xl shadow-lg min-h-[400px] flex items-center justify-center">
+      <p className="text-gray-300 text-lg">Información sobre las empresas colaboradoras.</p>
+    </div>
+  </div>
+);
+
+const StatisticsPage = () => (
+  <div className="p-6 text-white">
+    <h2 className="text-3xl font-bold mb-6">Estadísticas</h2>
+    <div className="bg-gray-800 p-8 rounded-xl shadow-lg min-h-[400px] flex items-center justify-center">
+      <p className="text-gray-300 text-lg">Visualiza estadísticas de prácticas aquí.</p>
+    </div>
+  </div>
+);
+
+const InformationPage = () => (
+  <div className="p-6 text-white">
+    <h2 className="text-3xl font-bold mb-6">Informaciones</h2>
+
+    <div className="space-y-8">
+      {/* Sección "¿Quieres saber sobre el proceso de prácticas?" */}
+      <div className="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
+        <h3 className="text-xl font-semibold text-white mb-4">¿Quieres saber sobre el proceso de prácticas?</h3>
+        <button className="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1">
+          REVISAR PROCESO
+        </button>
+      </div>
+
+      {/* Sección "Revisa las preguntas frecuentes si tienes dudas" */}
+      <div className="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
+        <h3 className="text-xl font-semibold text-white mb-4">Revisa las preguntas frecuentes si tienes dudas</h3>
+        <button className="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1">
+          PREGUNTAS FRECUENTES
+        </button>
+      </div>
+
+      {/* Sección "Revisa la charla de prácticas" */}
+      <div className="bg-gray-800 p-6 rounded-xl shadow-lg">
+        <h3 className="text-xl font-semibold text-white mb-4 text-center">Revisa la charla de prácticas</h3>
+        <div className="relative w-full overflow-hidden rounded-lg mb-6" style={{ paddingTop: '56.25%' /* 16:9 Aspect Ratio */ }}>
+          <iframe
+            className="absolute top-0 left-0 w-full h-full rounded-lg"
+            src="https://youtu.be/zCjyUdq32Ic" // Enlace del video actualizado
+            title="Proceso Prácticas 2025"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerPolicy="strict-origin-when-cross-origin"
+            allowFullScreen
+          ></iframe>
+        </div>
+        <div className="text-center">
+          <a
+            href="https://drive.google.com/file/d/1ka8OQcbP_Ob-FX9fzK0xNHdIjBgX2wOy/view"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1"
+          >
+            PRESENTACIÓN DE LA CHARLA
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+
 const App = () => {
   const [currentPage, setCurrentPage] = useState('my-practices'); // Página inicial: Mis Prácticas
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Estado para el sidebar en móviles
   const [industrialPracticeStatus, setIndustrialPracticeStatus] = useState('no_iniciada'); // Nuevo estado para la práctica industrial
+  const [industrialPracticeCategory, setIndustrialPracticeCategory] = useState(null); // Nueva categoría para la práctica industrial
+  const [industrialPracticeStartDate, setIndustrialPracticeStartDate] = useState('');
+  const [industrialPracticeEndDate, setIndustrialPracticeEndDate] = useState('');
 
   const navigate = (page) => {
     setCurrentPage(page);
@@ -1177,25 +1347,31 @@ const App = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const setPracticeDates = (startDate, endDate) => {
+    setIndustrialPracticeStartDate(startDate);
+    setIndustrialPracticeEndDate(endDate);
+  };
+
+
   // Renderiza la página actual basada en el estado
   const renderPage = () => {
     switch (currentPage) {
       case 'my-practices':
-        return <MyPracticesPage navigate={navigate} industrialPracticeStatus={industrialPracticeStatus} setIndustrialPracticeStatus={setIndustrialPracticeStatus} />;
+        return <MyPracticesPage navigate={navigate} industrialPracticeStatus={industrialPracticeStatus} setIndustrialPracticeStatus={setIndustrialPracticeStatus} practiceCategory={industrialPracticeCategory} practiceStartDate={industrialPracticeStartDate} practiceEndDate={industrialPracticeEndDate} setPracticeDates={setPracticeDates} />;
       case 'enroll-practice':
-        return <EnrollPracticePage navigate={navigate} setIndustrialPracticeStatus={setIndustrialPracticeStatus} />;
+        return <EnrollPracticePage navigate={navigate} setIndustrialPracticeStatus={setIndustrialPracticeStatus} setPracticeCategory={setIndustrialPracticeCategory} setPracticeDates={setPracticeDates} />;
       case 'my-profile':
-        return <PlaceholderPage title="Mi Perfil" />;
+        return <MyProfilePage />;
       case 'offers':
-        return <OffersPage />; // Renderiza el nuevo componente OffersPage
+        return <OffersPage />;
       case 'companies':
-        return <PlaceholderPage title="Empresas" />;
+        return <CompaniesPage />;
       case 'statistics':
-        return <PlaceholderPage title="Estadísticas" />;
+        return <StatisticsPage />;
       case 'information':
-        return <PlaceholderPage title="Informaciones" />;
+        return <InformationPage />;
       default:
-        return <MyPracticesPage navigate={navigate} industrialPracticeStatus={industrialPracticeStatus} setIndustrialPracticeStatus={setIndustrialPracticeStatus} />;
+        return <MyPracticesPage navigate={navigate} industrialPracticeStatus={industrialPracticeStatus} setIndustrialPracticeStatus={setIndustrialPracticeStatus} practiceCategory={industrialPracticeCategory} practiceStartDate={industrialPracticeStartDate} practiceEndDate={industrialPracticeEndDate} setPracticeDates={setPracticeDates} />;
     }
   };
 
