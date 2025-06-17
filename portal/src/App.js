@@ -453,7 +453,7 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
               </p>
               <p className="text-gray-300">
                 <span className="font-medium text-gray-100">Progreso:</span>{" "}
-                {industrialPracticeStatus === 'en_proceso' ? '37Hrs' : '226 Hr'}
+                {industrialPracticeStatus === 'en_proceso' ? '0Hrs' : '226 Hr'} {/* Modified: Progress to 0Hrs */}
               </p>
               <p className="text-gray-300">
                 <span className="font-medium text-gray-100">Inicio:</span>{" "}
@@ -471,18 +471,18 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
               <p className="text-gray-300">
                 <span className="font-medium text-gray-100">Nombre:</span>{" "}
                 {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada'
-                  ? 'Servicios Integrales de Computación e Informática'
+                  ? 'Mojang' // Modified: Company Name
                   : 'Nombre de la empresa pendiente de confirmación'}
               </p>
               <p className="text-gray-300">
                 <span className="font-medium text-gray-100">Dirección:</span>{" "}
                 {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada'
-                  ? 'La Concepción 81, of 304, providencia, stgo'
+                  ? 'Sveavägen 41, 111 57 Estocolmo, Suecia' // Modified: Company Address
                   : 'Dirección pendiente de confirmación'}
               </p>
               <p className="text-gray-300">
                 <span className="font-medium text-gray-100">RUT:</span>{" "}
-                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? '78.898.950-4' : 'RUT pendiente de confirmación'}
+                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? '55.123.456-9' : 'RUT pendiente de confirmación'} {/* Modified: Company RUT */}
               </p>
             </div>
 
@@ -490,15 +490,15 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
             <div className="bg-gray-900 p-4 rounded-lg space-y-2">
               <p className="text-gray-300">
                 <span className="font-medium text-gray-100">Nombre:</span>{" "}
-                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? 'Celenia Ojeda' : 'Nombre pendiente de confirmación'}
+                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? 'Markus Persson' : 'Nombre pendiente de confirmación'} {/* Modified: Supervisor Name */}
               </p>
               <p className="text-gray-300">
                 <span className="font-medium text-gray-100">Email:</span>{" "}
-                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? 'notificaciones@sideciltda.cl' : 'Email pendiente de confirmación'}
+                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? 'markus.persson@mojang.com' : 'Email pendiente de confirmación'} {/* Modified: Supervisor Email */}
               </p>
               <p className="text-gray-300">
                 <span className="font-medium text-gray-100">Teléfono:</span>{" "}
-                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? '+56948473469' : 'Teléfono pendiente de confirmación'}
+                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? '+46 70 123 45 67' : 'Teléfono pendiente de confirmación'} {/* Modified: Supervisor Phone */}
               </p>
             </div>
           </div>
@@ -1625,6 +1625,13 @@ const OffersPage = () => {
       details: 'Práctica para técnico universitario electrónico\nNúmero de cupos: 1\nHorario: lunes a jueves, de 8.30 a 18.00, con 1 hora de colación, y los viernes de 7.30 a 17.00, con 1 hora de colación.\nPago práctica: 80.000 líquidos mensuales\nLugar de práctica: Ojos de Agua 219, Villa Alemana',
       date: 'jueves, 12 de octubre, 2023',
     },
+    { // New offer added based on the previous conversation history
+      company: 'Mojang',
+      location: 'Estocolmo, Suecia',
+      contact: 'jobs@mojang.com',
+      details: 'Estamos buscando ingenieros de software talentosos para unirse a nuestro equipo de desarrollo de juegos. Experiencia en Java/C++ y pasión por los videojuegos es un plus.',
+      date: 'viernes, 17 de mayo, 2024',
+    },
   ];
 
   return (
@@ -1807,10 +1814,7 @@ const App = () => {
       <main className="flex-grow p-4 lg:ml-64 transition-all duration-300 ease-in-out">
         {/* Header para el contenido principal */}
         <header className="flex justify-end items-center py-4 px-6 bg-gray-800 rounded-xl shadow-lg mb-6">
-          <div id="user-profile-section" className="flex items-center text-white"> {/* ID para el tour de onboarding */}
-            <span className="font-semibold text-lg mr-2">RENATO RAMIREZ</span> {/* Nombre de usuario actualizado */}
-            <ChevronDown size={20} />
-          </div>
+          {/* Eliminado el div con id="user-profile-section" */}
         </header>
 
         {renderPage()}
