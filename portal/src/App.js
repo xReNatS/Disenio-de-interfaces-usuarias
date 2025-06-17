@@ -291,6 +291,14 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
     developedActivity: '',
     pendingActivity: '',
   });
+  // Estado para los datos del formulario de nueva bitácora
+  const [newBitacoraData, setNewBitacoraData] = useState({
+    desdeLas: '08:00',
+    hastaLas: '17:00',
+    actividadDesarrollada: '',
+    actividadPendiente: '',
+  });
+
 
   // Nuevo estado para controlar la visibilidad del tour de detalles de la práctica
   const [showPracticeDetailsTour, setShowPracticeDetailsTour] = useState(() => {
@@ -490,15 +498,15 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
             <div className="bg-gray-900 p-4 rounded-lg space-y-2">
               <p className="text-gray-300">
                 <span className="font-medium text-gray-100">Nombre:</span>{" "}
-                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? 'Markus Persson' : 'Nombre pendiente de confirmación'} {/* Modified: Supervisor Name */}
+                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? 'Markus Persson' : 'Nombre pendiente de confirmación'} /* Modified: Supervisor Name */
               </p>
               <p className="text-gray-300">
                 <span className="font-medium text-gray-100">Email:</span>{" "}
-                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? 'markus.persson@mojang.com' : 'Email pendiente de confirmación'} {/* Modified: Supervisor Email */}
+                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? 'markus.persson@mojang.com' : 'Email pendiente de confirmación'} /* Modified: Supervisor Email */
               </p>
               <p className="text-gray-300">
                 <span className="font-medium text-gray-100">Teléfono:</span>{" "}
-                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? '+46 70 123 45 67' : 'Teléfono pendiente de confirmación'} {/* Modified: Supervisor Phone */}
+                {industrialPracticeStatus === 'en_proceso' || industrialPracticeStatus === 'completada' ? '+46 70 123 45 67' : 'Teléfono pendiente de confirmación'} /* Modified: Supervisor Phone */
               </p>
             </div>
           </div>
@@ -536,7 +544,6 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
 
       {activeTab === 'bitácoras' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left min-h-[400px]"> {/* Added min-h for consistent display */}
-          {/* Columna izquierda: Calendario y botones */}
           <div className="space-y-4">
             <div className="bg-gray-900 p-4 rounded-lg">
               <div className="flex justify-between items-center text-white mb-4">
