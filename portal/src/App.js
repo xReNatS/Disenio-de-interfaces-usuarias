@@ -26,6 +26,7 @@ const Sidebar = ({ currentPage, navigate, toggleSidebar, isSidebarOpen }) => {
       )}
 
       <aside
+        id="sidebar-nav" // ID para el tour de onboarding
         className={`fixed inset-y-0 left-0 bg-gray-900 text-white w-64 p-5 flex flex-col shadow-xl
           transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
           transition-transform duration-300 ease-in-out z-50`}
@@ -127,6 +128,158 @@ const PracticeCard = ({ title, status, statusColor, children }) => {
   );
 };
 
+// Componente para el tour de los apartados de los detalles de la práctica
+const PracticeDetailsTourGuide = ({ activeTab, setActiveTab, onCloseTour }) => {
+  // Map tab keys to tour step indices for easier management
+  const tabToStepIndex = {
+    'información': 0,
+    'bitácoras': 1,
+    'estado': 2,
+    'solicitudes': 3,
+  };
+
+  const tourSteps = [
+    {
+      title: "Apartado: INFORMACIÓN",
+      description: (
+        <>
+          <p className="mb-2">Aquí encontrarás un resumen completo de tu práctica, incluyendo:</p>
+          <ul className="list-disc list-inside ml-4 space-y-1">
+            <li><strong>Práctica:</strong> Estado actual (en proceso, completada, en espera), categoría, modo, progreso y fechas de inicio y, si aplica, término.</li>
+            <li><strong>Empresa:</strong> Nombre, dirección y RUT de la organización donde realizas tu práctica.</li>
+            <li><strong>Supervisor:</strong> Detalles de contacto de la persona que te supervisa.</li>
+            <li><strong>Información General:</strong> Un mensaje rápido sobre el estado general de tu práctica.</li>
+            <li><strong>Última Bitácora:</strong> Un vistazo rápido a la última bitácora que has registrado.</li>
+          </ul>
+        </>
+      ),
+      tabKey: 'información',
+    },
+    {
+      title: "Apartado: BITÁCORAS",
+      description: (
+        <>
+          <p className="mb-2">En esta sección gestionarás tus registros diarios de actividades:</p>
+          <ul className="list-disc list-inside ml-4 space-y-1">
+            <li><strong>Calendario:</strong> Visualiza y selecciona los días para añadir o revisar bitácoras.</li>
+            <li><strong>Añadir Bitácora del Día:</strong> Un botón para registrar tus actividades diarias, el cual se activa cuando tu práctica está "En Proceso".</li>
+            <li><strong>Descargar Bitácoras en PDF:</strong> Opción para exportar un historial de tus bitácoras.</li>
+            <li><strong>Detalle de Bitácora:</strong> Muestra las actividades desarrolladas y pendientes del día seleccionado.</li>
+          </ul>
+        </>
+      ),
+      tabKey: 'bitácoras',
+    },
+    {
+      title: "Apartado: ESTADO",
+      description: (
+        <>
+          <p className="mb-2">Visualiza el progreso general de tu práctica en este diagrama de flujo:</p>
+          <ul className="list-disc list-inside ml-4 space-y-1">
+            <li><strong>En espera:</strong> Tu solicitud de práctica ha sido enviada y está a la espera de confirmación.</li>
+            <li><strong>Práctica confirmada:</strong> La empresa ha validado tu práctica y puedes comenzar a registrar bitácoras.</li>
+            <li><strong>Práctica finalizada:</strong> Has completado tu práctica y ha sido aprobada.</li>
+          </ul>
+          <p className="mt-2">El círculo que parpadea indica tu etapa actual en el proceso.</p>
+        </>
+      ),
+      tabKey: 'estado',
+    },
+    {
+      title: "Apartado: SOLICITUDES",
+      description: (
+        <>
+          <p className="mb-2">Esta es tu central de gestión para cualquier cambio o petición relacionada con tu práctica:</p>
+          <ul className="list-disc list-inside ml-4 space-y-1">
+            <li>Aquí podrás enviar solicitudes para modificar datos, como fechas de inicio/fin, información de la empresa, o cualquier otra configuración que necesites ajustar.</li>
+            <li>Si no has realizado ninguna solicitud, verás un mensaje indicándolo.</li>
+            <li>Utiliza el botón <strong>"+ AÑADIR SOLICITUD"</strong> para iniciar un nuevo proceso de cambio.</li>
+          </ul>
+        </>
+      ),
+      tabKey: 'solicitudes',
+    },
+  ];
+
+  // Initialize currentTourStepIndex based on activeTab
+  const [currentTourStepIndex, setCurrentTourStepIndex] = useState(tabToStepIndex[activeTab] || 0);
+
+  // Sync tour step with activeTab when activeTab changes (e.g., user clicks a tab manually)
+  useEffect(() => {
+    const newIndex = tabToStepIndex[activeTab];
+    if (newIndex !== undefined && newIndex !== currentTourStepIndex) {
+      setCurrentTourStepIndex(newIndex);
+    }
+  }, [activeTab]);
+
+  const currentStepData = tourSteps[currentTourStepIndex];
+  const totalSteps = tourSteps.length;
+  const progress = ((currentTourStepIndex + 1) / totalSteps) * 100;
+
+  const handleNextClick = () => {
+    if (currentTourStepIndex < totalSteps - 1) {
+      const newIndex = currentTourStepIndex + 1;
+      setCurrentTourStepIndex(newIndex);
+      setActiveTab(tourSteps[newIndex].tabKey); // Update active tab in parent
+    } else {
+      onCloseTour(); // Finalizar tour
+    }
+  };
+
+  const handlePreviousClick = () => {
+    if (currentTourStepIndex > 0) {
+      const newIndex = currentTourStepIndex - 1;
+      setCurrentTourStepIndex(newIndex);
+      setActiveTab(tourSteps[newIndex].tabKey); // Update active tab in parent
+    }
+  };
+
+  if (!currentStepData) return null; // No renderizar si no hay un paso válido
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
+      <div className="bg-gray-800 p-6 rounded-lg shadow-2xl relative max-w-md w-full mx-4 text-white">
+        <button
+          onClick={onCloseTour}
+          className="absolute top-3 right-3 text-gray-400 hover:text-white"
+        >
+          <X size={24} />
+        </button>
+        <h3 className="text-xl font-bold mb-3 text-orange-500">{currentStepData.title}</h3>
+        <div className="text-gray-300 mb-6 text-sm">
+          {currentStepData.description}
+        </div>
+
+        {/* Progress Bar */}
+        <div className="w-full bg-gray-700 rounded-full h-2.5 mb-6">
+          <div
+            className="bg-orange-500 h-2.5 rounded-full transition-all duration-300 ease-in-out"
+            style={{ width: `${progress}%` }}
+          ></div>
+        </div>
+
+        <div className="flex justify-between mt-4">
+          {currentTourStepIndex > 0 && (
+            <button
+              onClick={handlePreviousClick}
+              className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+            >
+              Atrás
+            </button>
+          )}
+          <button
+            onClick={handleNextClick}
+            className={`bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200 ${currentTourStepIndex === 0 ? 'ml-auto' : ''}`}
+          >
+            {currentTourStepIndex === totalSteps - 1 ? 'Finalizar' : 'Siguiente'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 // Componente para los detalles de la Práctica Industrial (cuando está en proceso o completada)
 const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, industrialPracticeStatus, practiceCategory, setPracticeDates, practiceStartDate, practiceEndDate }) => {
   // El estado 'activeTab' se inicializa con 'informacion' para que sea la pestaña predeterminada
@@ -139,13 +292,26 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
     pendingActivity: '',
   });
 
-  // Estado para los campos del formulario de nueva bitácora
-  const [newBitacoraData, setNewBitacoraData] = useState({
-    desdeLas: '08:00',
-    hastaLas: '17:00',
-    actividadDesarrollada: '',
-    actividadPendiente: '',
+  // Nuevo estado para controlar la visibilidad del tour de detalles de la práctica
+  const [showPracticeDetailsTour, setShowPracticeDetailsTour] = useState(() => {
+    // Leer desde localStorage si el tour ya fue visto
+    const tourSeen = localStorage.getItem('practiceDetailsTourSeen');
+    return tourSeen !== 'true';
   });
+
+  // Efecto para activar el tour de detalles de la práctica si está en estado 'en_espera'
+  useEffect(() => {
+    if (industrialPracticeStatus === 'en_espera' && !localStorage.getItem('practiceDetailsTourSeen')) {
+      setShowPracticeDetailsTour(true);
+    }
+  }, [industrialPracticeStatus]);
+
+  // Manejador para cerrar el tour de detalles y resetear la pestaña
+  const handleDismissPracticeDetailsTour = () => {
+    setShowPracticeDetailsTour(false);
+    localStorage.setItem('practiceDetailsTourSeen', 'true');
+    setActiveTab('información'); // Resetear a la pestaña de Información
+  };
 
   // Efecto para actualizar la fecha actual en la bitácora cuando el componente se monta
   useEffect(() => {
@@ -635,7 +801,7 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
                   ${industrialPracticeStatus === 'en_espera' ? 'pulse-animation' : ''}`}>
                   1
                 </div>
-                <span className="text-gray-300 text-sm mt-2 whitespace-nowrap">En espera...</span>
+                <span className="text-gray-300 text-sm mt-2 whitespace-nowrap">En espera....</span>
               </div>
 
               {/* Línea divisoria entre 1 y 2 */}
@@ -725,6 +891,15 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
           </button>
         </div>
       ) : null}
+
+      {/* Tour de Detalles de Práctica */}
+      {showPracticeDetailsTour && industrialPracticeStatus === 'en_espera' && (
+        <PracticeDetailsTourGuide
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          onCloseTour={handleDismissPracticeDetailsTour}
+        />
+      )}
     </div>
   );
 };
@@ -733,7 +908,7 @@ const IndustrialPracticeDetails = ({ setIndustrialPracticeStatus, navigate, indu
 // Componente de la página "Mis Prácticas"
 const MyPracticesPage = ({ navigate, industrialPracticeStatus, setIndustrialPracticeStatus, practiceCategory, practiceStartDate, practiceEndDate, setPracticeDates }) => {
   return (
-    <div className="p-6">
+    <div id="my-practices-section" className="p-6"> {/* ID para el tour de onboarding */}
       <h2 className="text-3xl font-bold text-white mb-6">Mis Prácticas</h2>
 
       <div className="space-y-4">
@@ -784,6 +959,7 @@ const MyPracticesPage = ({ navigate, industrialPracticeStatus, setIndustrialPrac
                 </p>
               </div>
               <button
+                id="enroll-practice-button" // ID para el tour de onboarding
                 onClick={() => navigate('enroll-practice')}
                 className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg mt-6"
               >
@@ -806,6 +982,188 @@ const MyPracticesPage = ({ navigate, industrialPracticeStatus, setIndustrialPrac
   );
 };
 
+// Nuevo componente para el tour de inscripción
+const EnrollmentTourGuide = ({ currentFormStep, setCurrentFormStep, onCloseTour }) => {
+  // Maneja el progreso interno del tour de inscripción
+  const [currentTourStepIndex, setCurrentTourStepIndex] = useState(currentFormStep - 1);
+
+  // Sincroniza el paso del tour con el paso del formulario si cambia externamente
+  useEffect(() => {
+    setCurrentTourStepIndex(currentFormStep - 1);
+  }, [currentFormStep]);
+
+  const tourSteps = [
+    {
+      title: "Paso 1: Selecciona el Tipo de Práctica",
+      description: (
+        <>
+          <p className="mb-2">Este es el punto de partida. Debes decidir si vas a:</p>
+          <ul className="list-disc list-inside ml-4 space-y-1">
+            <li>
+              <strong>Iniciar Práctica:</strong> Si vas a comenzar una práctica nueva, ya sea en una empresa o de tipo investigativa.
+            </li>
+            <li>
+              <strong>Convalidar Práctica:</strong> Si ya has realizado una actividad (como un trabajo en una empresa, un proyecto de investigación, trabajo social o emprendimiento) que deseas que sea reconocida como tu práctica.
+            </li>
+          </ul>
+          <p className="mt-2">Al seleccionar una opción, la aplicación avanzará automáticamente al siguiente paso.</p>
+        </>
+      ),
+    },
+    {
+      title: "Paso 2: Selecciona la Categoría de Práctica",
+      description: (
+        <>
+          <p className="mb-2">Dependiendo del tipo de práctica que hayas elegido en el Paso 1, se te presentarán diferentes categorías:</p>
+          <ul className="list-disc list-inside ml-4 space-y-1">
+            <li>
+              <strong>Si elegiste "Iniciar Práctica":</strong>
+              <ul className="list-circle list-inside ml-6">
+                <li>
+                  <strong>Práctica en una empresa:</strong> Para prácticas tradicionales en el sector privado o público.
+                </li>
+                <li>
+                  <strong>Práctica investigativa:</strong> Para prácticas enfocadas en proyectos de investigación.
+                </li>
+              </ul>
+            </li>
+            <li>
+              <strong>Si elegiste "Convalidar Práctica":</strong>
+              <ul className="list-circle list-inside ml-6">
+                <li>
+                  <strong>Empresa o Institución:</strong> Para convalidar una experiencia laboral o de colaboración con una institución.
+                </li>
+                <li>
+                  <strong>Investigativa:</strong> Para convalidar un trabajo de investigación.
+                </li>
+                <li>
+                  <strong>Trabajo Social:</strong> Para convalidar experiencias en el ámbito social.
+                </li>
+                <li>
+                  <strong>Emprendimiento:</strong> Para convalidar la experiencia de iniciar y desarrollar un proyecto propio.
+                </li>
+              </ul>
+            </li>
+          </ul>
+          <p className="mt-2">Al seleccionar una categoría, el sistema te llevará al siguiente paso.</p>
+        </>
+      ),
+    },
+    {
+      title: "Paso 3: Confirma los Requisitos",
+      description: (
+        <>
+          <p className="mb-2">Este paso te proporciona información crucial sobre los requisitos para iniciar tu práctica. Es fundamental que leas y entiendas esta sección.</p>
+          <ul className="list-disc list-inside ml-4 space-y-1">
+            <li>
+              <strong>Información Relevante:</strong> Se te indicará qué tipo de datos necesitarás de la institución o empresa donde realizarás tu práctica, incluyendo:
+              <ul className="list-circle list-inside ml-6">
+                <li>Nombre, RUT y dirección de la institución.</li>
+                <li>Nombre, correo electrónico y teléfono de contacto de tu supervisor/a.</li>
+              </ul>
+            </li>
+            <li>
+              <strong>Confirmación:</strong> Debes marcar la casilla "Confirmo que cumplo con todos los requisitos." Este paso asegura que estás al tanto de la información necesaria antes de proceder a la fase de llenado de datos.
+            </li>
+            <li>
+              <strong>Avance:</strong> El botón "SIGUIENTE" estará deshabilitado hasta que marques la casilla de confirmación.
+            </li>
+          </ul>
+        </>
+      ),
+    },
+    {
+      title: "Paso 4: Rellena los Datos de la Práctica",
+      description: (
+        <>
+          <p className="mb-2">Este es el paso final donde ingresarás toda la información detallada sobre tu práctica. Los campos están organizados en secciones claras:</p>
+          <ul className="list-disc list-inside ml-4 space-y-1">
+            <li>
+              <strong>Datos de la Empresa:</strong> Completa el Nombre, Dirección y RUT de la empresa o institución.
+            </li>
+            <li>
+              <strong>Datos del Supervisor:</strong> Ingresa el Nombre, Email y Teléfono de contacto de tu supervisor.
+            </li>
+            <li>
+              <strong>Detalles de la Práctica:</strong> Selecciona la Fecha de Inicio y las Horas Totales de tu práctica (ej. 162 o 324 horas).
+            </li>
+            <li>
+              <strong>Consideración especial (opcional):</strong> Un campo de texto donde puedes añadir cualquier comentario sobre condiciones especiales (ej. situación financiera, diagnóstico TEA). Esta información es confidencial.
+            </li>
+          </ul>
+          <p className="mt-2">Una vez que hayas completado todos los campos obligatorios, haz clic en el botón "INGRESAR PRÁCTICA".</p>
+        </>
+      ),
+    },
+  ];
+
+  const currentStepData = tourSteps[currentTourStepIndex];
+  const totalSteps = tourSteps.length;
+  const progress = ((currentTourStepIndex + 1) / totalSteps) * 100;
+
+  const handleNextClick = () => {
+    if (currentTourStepIndex < totalSteps - 1) {
+      const newTourStepIndex = currentTourStepIndex + 1;
+      setCurrentTourStepIndex(newTourStepIndex);
+      setCurrentFormStep(newTourStepIndex + 1); // Sincroniza el paso del formulario
+    } else {
+      onCloseTour(); // Finalizar tour y redirigir
+    }
+  };
+
+  const handlePreviousClick = () => {
+    if (currentTourStepIndex > 0) {
+      const newTourStepIndex = currentTourStepIndex - 1;
+      setCurrentTourStepIndex(newTourStepIndex);
+      setCurrentFormStep(newTourStepIndex + 1); // Sincroniza el paso del formulario
+    }
+  };
+
+  if (!currentStepData) return null; // No renderizar si no hay un paso válido
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
+      <div className="bg-gray-800 p-6 rounded-lg shadow-2xl relative max-w-md w-full mx-4 text-white">
+        <button
+          onClick={onCloseTour} // Cierra y redirige a la página principal
+          className="absolute top-3 right-3 text-gray-400 hover:text-white"
+        >
+          <X size={24} />
+        </button>
+        <h3 className="text-xl font-bold mb-3 text-orange-500">{currentStepData.title}</h3>
+        <div className="text-gray-300 mb-6 text-sm">
+          {currentStepData.description}
+        </div>
+
+        {/* Progress Bar */}
+        <div className="w-full bg-gray-700 rounded-full h-2.5 mb-6">
+          <div
+            className="bg-orange-500 h-2.5 rounded-full transition-all duration-300 ease-in-out"
+            style={{ width: `${progress}%` }}
+          ></div>
+        </div>
+
+        <div className="flex justify-between mt-4">
+          {currentTourStepIndex > 0 && (
+            <button
+              onClick={handlePreviousClick}
+              className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+            >
+              Atrás
+            </button>
+          )}
+          <button
+            onClick={handleNextClick}
+            className={`bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200 ${currentTourStepIndex === 0 ? 'ml-auto' : ''}`}
+          >
+            {currentTourStepIndex === totalSteps - 1 ? 'Finalizar' : 'Siguiente'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Componente de la nueva página "Inscribir Práctica"
 const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPracticeCategory, setPracticeDates }) => {
   const [currentStep, setCurrentStep] = useState(1); // Estado para controlar el paso actual (1: Tipo, 2: Categoría, etc.)
@@ -823,17 +1181,33 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPractice
     hours: '324', // Default to 324 hours
   });
 
-  const totalSteps = 4;
+  const totalFormSteps = 4;
   const stepNames = ['Tipo', 'Categoría', 'Requisitos', 'Datos'];
 
-  // Función para avanzar al siguiente paso
+  // Estado y efecto para controlar el tour de inscripción
+  const [showEnrollmentTour, setShowEnrollmentTour] = useState(() => {
+    // Leer desde localStorage si el tour ya fue visto
+    const tourSeen = localStorage.getItem('enrollmentTourSeen');
+    return tourSeen !== 'true';
+  });
+
+
+  // Función para cerrar el tour de inscripción y marcarlo como visto
+  const handleDismissEnrollmentTour = () => {
+    setShowEnrollmentTour(false);
+    localStorage.setItem('enrollmentTourSeen', 'true'); // Marcar el tour como visto
+    setCurrentStep(1); // Reiniciar al Paso 1
+  };
+
+
+  // Función para avanzar al siguiente paso del formulario
   const handleNextStep = () => {
-    if (currentStep < totalSteps) {
+    if (currentStep < totalFormSteps) {
       setCurrentStep(currentStep + 1);
     }
   };
 
-  // Función para retroceder al paso anterior
+  // Función para retroceder al paso anterior del formulario
   const handlePreviousStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
@@ -865,6 +1239,10 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPractice
   // Función para finalizar la inscripción y cambiar el estado de la práctica
   const handleIngresarPractica = () => {
     setIndustrialPracticeStatus('en_espera'); // Cambiar el estado de la práctica industrial a "En espera"
+    // Marcar el tour como visto al completar la inscripción
+    localStorage.setItem('enrollmentTourSeen', 'true');
+    setShowEnrollmentTour(false); // Ocultar el tour si aún está visible
+
     // Replaced alert with a custom message box for better UX
     const messageBox = document.createElement('div');
     messageBox.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-green-600 text-white p-4 rounded-lg shadow-lg z-[9999]';
@@ -880,7 +1258,7 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPractice
     <div className="p-6">
       <h2 className="text-3xl font-bold text-white mb-6">Inscribir Práctica</h2>
 
-      {/* Barra de progreso */}
+      {/* Barra de progreso del formulario */}
       <div className="mb-8">
         <div className="flex justify-between text-gray-400 text-sm mb-2">
           {stepNames.map((name, index) => (
@@ -892,20 +1270,21 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPractice
         <div className="w-full bg-gray-700 rounded-full h-2.5">
           <div
             className="bg-orange-500 h-2.5 rounded-full transition-all duration-500 ease-in-out"
-            style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+            style={{ width: `${(currentStep / totalFormSteps) * 100}%` }}
           ></div>
         </div>
       </div>
 
       <div className="bg-gray-800 p-8 rounded-xl shadow-lg min-h-[500px] flex flex-col justify-between">
-        {/* Contenido de los pasos */}
+        {/* Contenido de los pasos del formulario */}
         {currentStep === 1 && (
           <div className="text-center flex flex-col justify-center flex-grow">
-            <h3 className="text-2xl font-semibold text-white mb-12">Selecciona el tipo de práctica</h3> {/* Increased mb-6 to mb-12 */}
+            <h3 className="text-2xl font-semibold text-white mb-12" id="tour-step1-title">Selecciona el tipo de práctica</h3> {/* ID para el tour */}
             <div className="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-6">
               <button
                 onClick={() => selectPracticeType('iniciar')}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex flex-col items-center"
+                id="tour-step1-iniciar" // ID para el tour
               >
                 <Plus size={32} className="mb-2" />
                 Iniciar Práctica
@@ -913,6 +1292,7 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPractice
               <button
                 onClick={() => selectPracticeType('convalidar')}
                 className="bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex flex-col items-center"
+                id="tour-step1-convalidar" // ID para el tour
               >
                 <CheckCircle size={32} className="mb-2" />
                 Convalidar Práctica
@@ -923,13 +1303,14 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPractice
 
         {currentStep === 2 && (
           <div className="text-center flex flex-col justify-center flex-grow">
-            <h3 className="text-2xl font-semibold text-white mb-12">Selecciona la categoría de práctica</h3> {/* Increased mb-6 to mb-12 */}
+            <h3 className="text-2xl font-semibold text-white mb-12" id="tour-step2-title">Selecciona la categoría de práctica</h3> {/* ID para el tour */}
             <div className="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-6">
               {practiceType === 'iniciar' && (
                 <>
                   <button
                     onClick={() => selectPracticeCategoryAndNavigate('empresa')}
                     className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex flex-col items-center"
+                    id="tour-step2-empresa" // ID para el tour
                   >
                     <Building size={32} className="mb-2" />
                     Práctica en una empresa
@@ -937,6 +1318,7 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPractice
                   <button
                     onClick={() => selectPracticeCategoryAndNavigate('investigativa')}
                     className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-4 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex flex-col items-center"
+                    id="tour-step2-investigativa" // ID para el tour
                   >
                     <Search size={32} className="mb-2" />
                     Práctica investigativa
@@ -948,6 +1330,7 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPractice
                   <button
                     onClick={() => selectPracticeCategoryAndNavigate('empresa_institucion')}
                     className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex flex-col items-center"
+                    id="tour-step2-empresa-institucion" // ID para el tour
                   >
                     <Building size={32} className="mb-2" />
                     Empresa o Institución
@@ -955,6 +1338,7 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPractice
                   <button
                     onClick={() => selectPracticeCategoryAndNavigate('investigativa')}
                     className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-4 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex flex-col items-center"
+                    id="tour-step2-investigativa-convalidar" // ID para el tour
                   >
                     <Search size={32} className="mb-2" />
                     Investigativa
@@ -962,6 +1346,7 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPractice
                   <button
                     onClick={() => selectPracticeCategoryAndNavigate('trabajo_social')}
                     className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-4 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex flex-col items-center"
+                    id="tour-step2-trabajo-social" // ID para el tour
                   >
                     <User size={32} className="mb-2" />
                     Trabajo Social
@@ -969,6 +1354,7 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPractice
                   <button
                     onClick={() => selectPracticeCategoryAndNavigate('emprendimiento')}
                     className="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-4 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex flex-col items-center"
+                    id="tour-step2-emprendimiento" // ID para el tour
                   >
                     <Lightbulb size={32} className="mb-2" />
                     Emprendimiento
@@ -981,11 +1367,11 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPractice
 
         {currentStep === 3 && (
           <div className="text-left space-y-6">
-            <h3 className="text-2xl font-semibold text-white mb-4 flex items-center">
+            <h3 className="text-2xl font-semibold text-white mb-4 flex items-center" id="tour-step3-title">
               <Info size={28} className="text-orange-500 mr-3" />
               Información para iniciar tu práctica
             </h3>
-            <div className="bg-gray-900 p-6 rounded-lg space-y-4">
+            <div className="bg-gray-900 p-6 rounded-lg space-y-4" id="tour-step3-info"> {/* ID para el tour */}
               <p className="text-gray-300">
                 Para iniciar una práctica investigativa, el proceso es el mismo que con una empresa, necesitas haberte contactado con una institución y haber sido aceptado para realizar ahí tu práctica.
               </p>
@@ -1000,7 +1386,7 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPractice
             <div className="flex items-center mt-6">
               <input
                 type="checkbox"
-                id="meetsRequirements"
+                id="meetsRequirements" // Usar este ID único para el input y para el tour
                 checked={meetsRequirements}
                 onChange={(e) => setMeetsRequirements(e.target.checked)}
                 className="form-checkbox h-5 w-5 text-orange-600 bg-gray-700 border-gray-600 rounded focus:ring-orange-500"
@@ -1014,10 +1400,10 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPractice
 
         {currentStep === 4 && (
           <div className="text-left space-y-4">
-            <h3 className="text-2xl font-semibold text-white mb-4">Datos de la Práctica</h3>
+            <h3 className="text-2xl font-semibold text-white mb-4" id="tour-step4-title">Datos de la Práctica</h3> {/* ID para el tour */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Sección Empresa */}
-              <div className="space-y-4">
+              <div className="space-y-4" id="tour-step4-company-data"> {/* ID para el tour */}
                 <h4 className="text-xl font-semibold text-white flex items-center mb-2"><Building size={20} className="mr-2"/> Datos de la Empresa</h4>
                 <div>
                   <label htmlFor="companyName" className="block text-gray-400 text-sm mb-1">Nombre de la Empresa:</label>
@@ -1058,7 +1444,7 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPractice
               </div>
 
               {/* Sección Supervisor */}
-              <div className="space-y-4">
+              <div className="space-y-4" id="tour-step4-supervisor-data"> {/* ID para el tour */}
                 <h4 className="text-xl font-semibold text-white flex items-center mb-2"><User size={20} className="mr-2"/> Datos del Supervisor</h4>
                 <div>
                   <label htmlFor="supervisorName" className="block text-gray-400 text-sm mb-1">Nombre del Supervisor:</label>
@@ -1100,7 +1486,7 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPractice
             </div>
 
             {/* Sección Fechas y Horas */}
-            <div className="space-y-4 mt-6">
+            <div className="space-y-4 mt-6" id="tour-step4-practice-details"> {/* ID para el tour */}
               <h4 className="text-xl font-semibold text-white flex items-center mb-2"><CalendarDays size={20} className="mr-2"/> Detalles de la Práctica</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -1153,7 +1539,7 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPractice
           </div>
         )}
 
-        {/* Botones de navegación de pasos */}
+        {/* Botones de navegación de pasos del formulario */}
         <div className="flex justify-between mt-8 pt-4 border-t border-gray-700">
           <button
             onClick={handlePreviousStep}
@@ -1161,7 +1547,7 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPractice
           >
             {currentStep === 1 ? 'CANCELAR' : 'ANTERIOR'}
           </button>
-          {currentStep < totalSteps && currentStep !== 1 ? ( // Only show SIGUIENTE if not step 1
+          {currentStep < totalFormSteps && currentStep !== 1 ? ( // Only show SIGUIENTE if not step 1
             <button
               onClick={handleNextStep}
               disabled={currentStep === 3 && !meetsRequirements} // Deshabilita si no se cumplen los requisitos en el paso 3
@@ -1170,7 +1556,7 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPractice
             >
               SIGUIENTE
             </button>
-          ) : currentStep === totalSteps ? (
+          ) : currentStep === totalFormSteps ? (
             <button
               onClick={handleIngresarPractica}
               className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-0.5"
@@ -1180,6 +1566,15 @@ const EnrollPracticePage = ({ navigate, setIndustrialPracticeStatus, setPractice
           ) : null} {/* Render nothing for SIGUIENTE button on Step 1 */}
         </div>
       </div>
+
+      {/* Tour de Inscripción */}
+      {showEnrollmentTour && (
+        <EnrollmentTourGuide
+          currentFormStep={currentStep} // Pasa el paso actual del formulario al tour
+          setCurrentFormStep={setCurrentStep} // Pasa la función para actualizar el paso del formulario
+          onCloseTour={handleDismissEnrollmentTour}
+        />
+      )}
     </div>
   );
 };
@@ -1306,7 +1701,7 @@ const InformationPage = () => (
         <div className="relative w-full overflow-hidden rounded-lg mb-6" style={{ paddingTop: '56.25%' /* 16:9 Aspect Ratio */ }}>
           <iframe
             className="absolute top-0 left-0 w-full h-full rounded-lg"
-            src="https://youtu.be/zCjyUdq32Ic" // Enlace del video actualizado
+            src="https://www.youtube.com/embed/zCjyUdq32Ic" // Enlace del video actualizado
             title="Proceso Prácticas 2025"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -1357,7 +1752,15 @@ const App = () => {
   const renderPage = () => {
     switch (currentPage) {
       case 'my-practices':
-        return <MyPracticesPage navigate={navigate} industrialPracticeStatus={industrialPracticeStatus} setIndustrialPracticeStatus={setIndustrialPracticeStatus} practiceCategory={industrialPracticeCategory} practiceStartDate={industrialPracticeStartDate} practiceEndDate={industrialPracticeEndDate} setPracticeDates={setPracticeDates} />;
+        return <MyPracticesPage
+          navigate={navigate}
+          industrialPracticeStatus={industrialPracticeStatus}
+          setIndustrialPracticeStatus={setIndustrialPracticeStatus}
+          practiceCategory={industrialPracticeCategory}
+          practiceStartDate={industrialPracticeStartDate}
+          practiceEndDate={industrialPracticeEndDate}
+          setPracticeDates={setPracticeDates}
+        />;
       case 'enroll-practice':
         return <EnrollPracticePage navigate={navigate} setIndustrialPracticeStatus={setIndustrialPracticeStatus} setPracticeCategory={setIndustrialPracticeCategory} setPracticeDates={setPracticeDates} />;
       case 'my-profile':
@@ -1371,7 +1774,15 @@ const App = () => {
       case 'information':
         return <InformationPage />;
       default:
-        return <MyPracticesPage navigate={navigate} industrialPracticeStatus={industrialPracticeStatus} setIndustrialPracticeStatus={setIndustrialPracticeStatus} practiceCategory={industrialPracticeCategory} practiceStartDate={industrialPracticeStartDate} practiceEndDate={industrialPracticeEndDate} setPracticeDates={setPracticeDates} />;
+        return <MyPracticesPage
+          navigate={navigate}
+          industrialPracticeStatus={industrialPracticeStatus}
+          setIndustrialPracticeStatus={setIndustrialPracticeStatus}
+          practiceCategory={industrialPracticeCategory}
+          practiceStartDate={industrialPracticeStartDate}
+          practiceEndDate={industrialPracticeEndDate}
+          setPracticeDates={setPracticeDates}
+        />;
     }
   };
 
@@ -1396,7 +1807,7 @@ const App = () => {
       <main className="flex-grow p-4 lg:ml-64 transition-all duration-300 ease-in-out">
         {/* Header para el contenido principal */}
         <header className="flex justify-end items-center py-4 px-6 bg-gray-800 rounded-xl shadow-lg mb-6">
-          <div className="flex items-center text-white">
+          <div id="user-profile-section" className="flex items-center text-white"> {/* ID para el tour de onboarding */}
             <span className="font-semibold text-lg mr-2">RENATO RAMIREZ</span> {/* Nombre de usuario actualizado */}
             <ChevronDown size={20} />
           </div>
